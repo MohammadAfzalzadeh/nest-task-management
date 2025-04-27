@@ -1,3 +1,9 @@
+# TODO:
+# 1. add network and how now it is work?
+# 2. add volume for persistent data on db
+# 3. add resource management for cpu & memory
+# 4. add health check for all container
+# 5. reverse proxy (I think now is not meaning in my project)
 version: '3.8'
 
 services:
