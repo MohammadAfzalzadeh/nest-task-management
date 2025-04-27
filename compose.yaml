@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: nest-auth
+    ports:
+      - "3001:3001"   # Adjust this to your app's internal port
+    environment:
+      - PORT=3000
+      - DATABSE_HOST=db
+      - DATABSE_PORT=5432
+      - DATABSE_USERNAME=postgres
+      - DATABSE_PASSWOED=123456
+      - DATABSE_NAME=auth
+      - JWT_SECRET=9d23b0970e84873209b83c405206c186c9053640e9a961d0dcad822db93434e3
+      - JWT_EXPIRES_IN=360s
+      - NODE_ENV=prod
+      - PASSWORD_PEPPER=Dpo3Mlr&S5MTvdW7ZZP$K6vC&AnX%nv*Z9n-Pq+0c8)bwO(YCCGA
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    container_name: my-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: auth
+
+
+
