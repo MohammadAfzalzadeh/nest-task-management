@@ -2,7 +2,6 @@
 # 1. Professional on docker networks
 # 2. Professional on docker volume classes
 # 3. add resource management for cpu & memory
-# 4. add health check for all container
 # 5. reverse proxy (I think now is not meaning in my project)
 # 6. replication
 # 7. log management
@@ -42,6 +41,17 @@ services:
       timeout: 30s
       retries: 3
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 50M
+        reservations:
+          cpus: '0.25'
+          memory: 20M
+#      mode: replicated
+#      replicas: 3
+#      endpoint_mode: dnsrr
     depends_on:
       - db
     networks:
