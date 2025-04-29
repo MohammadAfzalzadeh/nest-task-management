@@ -1,17 +1,30 @@
 # TODO:
-# 1. add network and how now it is work?
-# 2. add volume for persistent data on db
+# 1. Professional on docker networks
+# 2. Professional on docker volume classes
 # 3. add resource management for cpu & memory
 # 4. add health check for all container
 # 5. reverse proxy (I think now is not meaning in my project)
+# 6. replication
+# 7. log management
+###---###
+# TODO: Need to test it
+############################
 version: '3.8'
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  db-data:
+    name: "pg-data"
 
 services:
   app:
     build: .
     container_name: nest-auth
     ports:
-      - "3001:3001"   # Adjust this to your app's internal port
+      - "3001:3001"
     environment:
       - PORT=3000
       - DATABSE_HOST=db
@@ -23,8 +36,16 @@ services:
       - JWT_EXPIRES_IN=360s
       - NODE_ENV=prod
       - PASSWORD_PEPPER=Dpo3Mlr&S5MTvdW7ZZP$K6vC&AnX%nv*Z9n-Pq+0c8)bwO(YCCGA
+    healthcheck:
+      test: curl --fail http://localhost:3000/ || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     depends_on:
       - db
+    networks:
+      - backend
 
   db:
     image: postgres:16
@@ -34,6 +55,16 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123456
       POSTGRES_DB: auth
+    healthcheck:
+      test: pg_isready -h 127.0.0.1 -p 5432 -U postgres -d auth -q || exit 1
+      interval: 40s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - db-data:/var/lib/postgres/data
+    networks:
+      - backend
 
 
 
