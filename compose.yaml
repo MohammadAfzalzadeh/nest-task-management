@@ -5,6 +5,8 @@
 # 5. reverse proxy (I think now is not meaning in my project)
 # 6. replication
 # 7. log management
+# - https://medium.com/@squadcast/docker-compose-logs-a-guide-for-developers-and-devops-engineers-c61c7faba4c4
+# - https://docs.docker.com/engine/logging/configure/
 ###---###
 # TODO: Need to test it
 ############################
