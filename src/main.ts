@@ -14,11 +14,12 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('Task Management API')
+    .setDescription('API for managing tasks')
     .setVersion('1.0')
-    .addTag('cats')
+    .addBearerAuth() // Optional: for JWT auth
     .build();
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
   app.use(cookieParser());

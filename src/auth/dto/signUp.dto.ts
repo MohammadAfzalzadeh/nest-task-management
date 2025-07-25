@@ -1,54 +1,27 @@
 import {
-  IsDate,
-  IsDateString,
   IsEmail,
   IsNotEmpty,
-  IsNumberString,
-  IsOptional, IsString,
-  IsStrongPassword, Matches, MaxDate,
-  MinDate,
+  IsStrongPassword, 
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class SignUpDto{
   @IsNotEmpty()
+  @ApiProperty({ example: 'mohammad', description: 'the unique username' , required: true })
   username:string;
 
   @IsNotEmpty()
   @IsStrongPassword()
+  @ApiProperty({ example: '1qaz!QAZ', description: 'strong password' , required: true })
   password:string;
 
   @IsNotEmpty()
   @IsStrongPassword()
+  @ApiProperty({ example: '1qaz!QAZ', description: 'repeat the password' , required: true })
   repeatPassword:string;
-
-  @IsOptional()
-  name?:string;
 
   @IsNotEmpty()
   @IsEmail()
+  @ApiProperty({ example: 'mohamamd@gmail.com', description: 'a valid gmail' , required: true })
   email:string;
-
-  @IsNotEmpty()
-  @IsString()
-  @Matches(/^09[0-9]{9}/)
-  phoneNumber:string;
-
-  @IsOptional()
-  @Transform(({ value }) => new Date(value), { toClassOnly: true })
-  @IsDate()
-  @MaxDate(new Date('2007-04'))
-  birthday?:Date;
 }
-
-/** Test data:
- {
-  "username":"mmd" ,
-  "password": "1qaz!QAZ",
-  "repeatPassword":"1qaz!QAZ",
-  "phoneNumber":"09154502521",
-  "email":"mmm@chert.pert",
-  "birthday":"2001:10:13",
-  "name":"mamamd afzal"
- }
- */
