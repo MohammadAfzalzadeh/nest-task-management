@@ -16,20 +16,26 @@ export class AuthEntity{
   @Column({ select: false })
   password:string;
 
-  @Column()
-  name?:string;
+  @Column({ nullable: true })
+  firstName?:string;
 
   @Column()
   email:string;
 
-  @Column()
-  phoneNumber:string;
+  @Column({ nullable: true })
+  lastName?:string;
 
-  @Column()
+  @Column({ nullable: true })
   birthday?:Date;
 
   @Column({default:true})
   isActive:boolean;
+
+  @Column({ nullable: true })
+  job?:string;
+
+  @Column({ nullable: true })
+  bio?:string;
 
   @Column({default : RoleEntity.user})
   role:RoleEntity;
