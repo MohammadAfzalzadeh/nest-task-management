@@ -10,7 +10,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AuthEntity } from './auth.entity';
 import { Repository } from 'typeorm';
 import { LogInDto } from './dto/logIn.dto';
-import  {JwtService} from '@nestjs/jwt'
+import { ProfileDto } from './dto/profile.dto';
+import { JwtService } from '@nestjs/jwt'
 import { ActiveUserDto } from './dto/activeUser.dto';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
@@ -53,6 +54,17 @@ export class AuthService {
     return this.authDbInterface.getUser(userId)
   }
 
+  async changeProfile(userId:string , profileDto:ProfileDto):Promise<AuthEntity[]>{
+    let user:AuthEntity | null =
+      await this.authDbInterface.getUser(userId);
+    if (! user)
+      throw new NotFoundException('this user id not found.')
+
+    user = this.updateTargetIfSourceValid(profileDto, user);
+
+    return this.authDbInterface.addAuth(user);
+  }
+
   async activeUser(activeUserDto:ActiveUserDto){
     const user:AuthEntity | null =
       await this.authDbInterface.getUser(activeUserDto.userId);
@@ -76,14 +88,14 @@ export class AuthService {
 
   private destructDto2Entity(signUpDto:SignUpDto){
     const {
-      username , password,
-      name , email ,
-      phoneNumber , birthday
+      username ,
+      password,
+      email 
     } = signUpDto
     return {
-      username , password,
-      name , email ,
-      phoneNumber , birthday ,
+      username , 
+      password,
+      email ,
     }
   }
 
@@ -103,5 +115,16 @@ export class AuthService {
     };
     return this.jwtService.signAsync(payload)
   }
+
+
+  private updateTargetIfSourceValid(source, target) {
+    for (const [key, value] of Object.entries(source)) {
+      if (value !== null && value !== '') {
+        target[key] = value;
+      }
+    }
+    return target;
+  }
+  
 
 }
