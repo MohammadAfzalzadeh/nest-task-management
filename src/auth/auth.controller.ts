@@ -18,8 +18,9 @@ import { env } from 'node:process';
 import { Roles } from './roles.decorator';
 import { RolesGuard } from './roles.guard';
 import { ActiveUserDto } from './dto/activeUser.dto';
-import { NotFoundError } from 'rxjs';
+import { ChangeRole } from './dto/changeRole.dto'
 import { AuthEntity, RoleEntity } from './auth.entity';
+import { ProfileDto } from './dto/profile.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -51,7 +52,7 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('/user')
+  @Get('/profile')
   async getProfile(@Request() req:Req){
     const user = await this.authService.getProfile(req['user'].sub)
     if (! user)
@@ -80,11 +81,13 @@ export class AuthController {
 
   @UseGuards(AuthGuard , RolesGuard)
   @Roles(RoleEntity.admin)
-  @Get('/user')
-  async signOut(){}
+  @Patch('/role')
+  async changeRole(@Body() changeRole:ChangeRole){}
 
-  @UseGuards(AuthGuard , RolesGuard)
-  @Roles(RoleEntity.admin)
-  @Patch('/user')
-  async changeRole(){}
+  @UseGuards(AuthGuard)
+  @Patch('/profile')
+  async changeProfile(@Request() req:Req, @Body() profileDto:ProfileDto){
+    const userId = req['user'].sub
+    return this.authService.changeProfile(userId , profileDto)
+  }
 }
