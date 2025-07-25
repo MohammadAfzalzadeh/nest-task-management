@@ -17,7 +17,7 @@ export class  AuthDbInterface {
         'logIn.isActive'
       ])
       .where(
-        '(username = :username OR "phoneNumber" = :username OR email = :username)',
+        '(username = :username OR email = :username)',
         { username }
       )
       .andWhere('password = :password', { password:hashedPassword })
