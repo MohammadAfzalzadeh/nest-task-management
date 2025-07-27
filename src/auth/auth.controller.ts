@@ -135,7 +135,7 @@ export class AuthController {
       ],
     }),
   )
-  file: Express.Multer.File, profileImage: Express.Multer.File){
+  profileImage: Express.Multer.File){
     const userId = req['user'].sub
     await writeFile(path.join(this.profileImageBasePath, userId ) , profileImage.buffer)
     return {message : 'file uploaded succesfully.' }
