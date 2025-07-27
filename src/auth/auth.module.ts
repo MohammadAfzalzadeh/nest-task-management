@@ -9,6 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forFeature([AuthEntity]),
     JwtModule.registerAsync({
       imports: [ConfigModule], // make sure ConfigService is available here
