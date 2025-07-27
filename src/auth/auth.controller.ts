@@ -10,7 +10,10 @@ import {
   BadRequestException,
   Param,
   UseInterceptors,
-  UploadedFile
+  UploadedFile,
+  MaxFileSizeValidator,
+  ParseFilePipe,
+  FileTypeValidator
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signUp.dto';
@@ -32,14 +35,17 @@ import { Express } from 'express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import * as path from 'node:path';
-import * as mime from 'mime-types'; 
 
+const MAX_FILE_SIZE = parseInt(process.env.FILE_UPLOAD_MAX_SIZE_MB || '10') * 1024 * 1024
 @Controller('auth')
 export class AuthController {
+  private profileImageBasePath;
   constructor(
     private authService:AuthService,
     private configService: ConfigService
-  ) {}
+  ) {
+    this.profileImageBasePath = this.configService.get('PROFILE_IMAGE_BASE_PATH')
+  }
 
   @Post('/signUp')
   signUp(@Body() signUpDto:SignUpDto): Promise<AuthEntity[]>{
@@ -108,8 +114,7 @@ export class AuthController {
 
   @Get('/image/:userId')
   getProfileImage(@Param('userId') userId:string , @Response() res:Res){
-    const profileImageBasePath = this.configService.get('PROFILE_IMAGE_BASE_PATH')
-    const image = createReadStream(path.join(profileImageBasePath , userId));
+    const image = createReadStream(path.join(this.profileImageBasePath , userId));
     image.pipe(res);
   }
   
@@ -120,10 +125,19 @@ export class AuthController {
     type: ProfileImageDto
   })
   @UseInterceptors(FileInterceptor('profileImage'))
-  async updateProfileImage(@Request() req:Req, @UploadedFile() profileImage: Express.Multer.File){
+  async updateProfileImage(
+   @Request() req:Req,
+   @UploadedFile(
+    new ParseFilePipe({
+      validators: [
+        new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE }),
+        new FileTypeValidator({ fileType: /^image\/(jpeg|png|gif|webp|bmp|tiff|svg\+xml)$/ }),
+      ],
+    }),
+  )
+  file: Express.Multer.File, profileImage: Express.Multer.File){
     const userId = req['user'].sub
-    const profileImageBasePath = this.configService.get('PROFILE_IMAGE_BASE_PATH')
-    await writeFile(path.join(profileImageBasePath, userId ) , profileImage.buffer)
+    await writeFile(path.join(this.profileImageBasePath, userId ) , profileImage.buffer)
     return {message : 'file uploaded succesfully.' }
 
   }
