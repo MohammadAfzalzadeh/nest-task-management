@@ -12,7 +12,7 @@ paths:
               $ref: '#/components/schemas/SignUpDto'
       responses:
         '201':
-          description: ''
+          description: 'profile of user added'
       tags:
         - Auth
   /auth/logIn:
@@ -27,7 +27,7 @@ paths:
               $ref: '#/components/schemas/LogInDto'
       responses:
         '201':
-          description: ''
+          description: 'in response just says ok, and set JWT token on http cookies'
       tags:
         - Auth
   /auth/profile:
@@ -36,7 +36,7 @@ paths:
       parameters: []
       responses:
         '200':
-          description: ''
+          description: 'get profile that was logged in'
       tags:
         - Auth
     patch:
@@ -50,7 +50,7 @@ paths:
               $ref: '#/components/schemas/ProfileDto'
       responses:
         '200':
-          description: ''
+          description: 'updated profile info'
       tags:
         - Auth
   /auth/active:
@@ -65,7 +65,7 @@ paths:
               $ref: '#/components/schemas/ActiveUserDto'
       responses:
         '200':
-          description: ''
+          description: 'profile activation status'
       tags:
         - Auth
   /auth/users:
@@ -74,36 +74,21 @@ paths:
       parameters: []
       responses:
         '200':
-          description: ''
+          description: 'api for get all usernames in db'
       tags:
         - Auth
-  /auth/role:
-    patch:
-      operationId: AuthController_changeRole
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ChangeRole'
-      responses:
-        '200':
-          description: ''
-      tags:
-        - Auth
-  /auth/image/{userId}:
+  /auth/image/{username}:
     get:
       operationId: AuthController_getProfileImage
       parameters:
-        - name: userId
+        - name: username
           required: true
           in: path
           schema:
             type: string
       responses:
         '200':
-          description: ''
+          description: 'profile image as raw file'
       tags:
         - Auth
   /auth/image:
@@ -118,9 +103,140 @@ paths:
               $ref: '#/components/schemas/ProfileImageDto'
       responses:
         '201':
-          description: ''
+          description: 'success message'
+        '400': 
+          description: 'file limit or file type has some error'
       tags:
         - Auth
+  
+  /task/item:
+    get:
+      operationId: AuthController_getItemsList
+      parameters:
+        - name: sortFeild
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Task
+    post:
+      operationId: TaskController_addItem
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddItemDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - Task
+    patch:
+      operationId: TaskController_updateItem
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateItemDto'
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Task
+    delete:
+      operationId: TaskController_deleteItem
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteItemDto'
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Task
+  /task/item/{itemId}:
+    get:
+      operationId: AuthController_getItemDetail
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: sortFeild
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Task
+  /task/item/reports/{itemId}:
+    post:
+      operationId: AuthController_getItemDetail
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Task
+    put:
+      operationId: AuthController_getItemDetail
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Task
+  /task/item/note/{itemId}:
+    put:
+      operationId: AuthController_getItemDetail
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: sortFeild
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Task
+  /task/subitem:
+    post:
+      operationId: AuthController_getItemDetail
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Task
+
+
 info:
   title: Project Management API
   description: API for managing projects
@@ -176,10 +292,10 @@ components:
     ActiveUserDto:
       type: object
       properties:
-        userId:
+        username:
           type: string
-          example: 561badb8-b8e0-40b5-b607-28456830733b
-          description: id for user need changes active or not active
+          example: mohammad
+          description: username that need change activation
         setActive:
           type: boolean
           example: true
@@ -187,23 +303,6 @@ components:
       required:
         - userId
         - setActive
-    ChangeRole:
-      type: object
-      properties:
-        userId:
-          type: string
-          example: 561badb8-b8e0-40b5-b607-28456830733b
-          description: id for user need changes active or not active
-        role:
-          type: string
-          example: admin
-          enum:
-            - user
-            - admin
-          description: Role to assign to the user
-      required:
-        - userId
-        - role
     ProfileDto:
       type: object
       properties:
