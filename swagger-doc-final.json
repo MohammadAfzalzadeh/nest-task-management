@@ -1,0 +1,662 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Project Management API",
+        "description": "API for managing projects",
+        "version": "1.0",
+        "contact": {}
+    },
+    "servers": [],
+    "tags": [],
+    "paths": {
+        "/auth/signUp": {
+            "post": {
+                "operationId": "AuthController_signUp",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignUpDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "profile of user added"
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/logIn": {
+            "post": {
+                "operationId": "AuthController_logIn",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LogInDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "in response just says ok, and set JWT token on http cookies"
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/profile": {
+            "get": {
+                "operationId": "AuthController_getProfile",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "get profile that was logged in"
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            },
+            "patch": {
+                "operationId": "AuthController_changeProfile",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "updated profile info"
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/active": {
+            "patch": {
+                "operationId": "AuthController_activeUser",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActiveUserDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "profile activation status"
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/users": {
+            "get": {
+                "operationId": "AuthController_getAllUsers",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "api for get all usernames in db"
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/image/{username}": {
+            "get": {
+                "operationId": "AuthController_getProfileImage",
+                "parameters": [
+                    {
+                        "name": "username",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "profile image as raw file"
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/auth/image": {
+            "post": {
+                "operationId": "AuthController_updateProfileImage",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileImageDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "success message"
+                    },
+                    "400": {
+                        "description": "file limit or file type has some error"
+                    }
+                },
+                "tags": [
+                    "Auth"
+                ]
+            }
+        },
+        "/task/item": {
+            "get": {
+                "operationId": "AuthController_getItemsList",
+                "parameters": [
+                    {
+                        "name": "sortField",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "show all tasks that have not parent"
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            },
+            "post": {
+                "operationId": "TaskController_addItem",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddItemDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "add any task"
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            }
+        },
+        "/task/item/{itemId}": {
+            "get": {
+                "operationId": "AuthController_getItemDetail",
+                "parameters": [
+                    {
+                        "name": "itemId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortField",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "return details of item and show chidren item list"
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            },
+            "patch": {
+                "operationId": "TaskController_updateItem",
+                "parameters": [
+                    {
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddItemDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            },
+            "delete": {
+                "operationId": "TaskController_deleteItem",
+                "parameters": [
+                    {
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "delete item if it has no child by itemId"
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            }
+        },
+        "/task/item/reports/{itemId}": {
+            "post": {
+                "operationId": "AuthController_addReportForItem",
+                "parameters": [
+                    {
+                        "name": "itemId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddReportDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            },
+            "put": {
+                "operationId": "AuthController_updateReport",
+                "parameters": [
+                    {
+                        "name": "itemId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "reportId",
+                        "required": true,
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddReportDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            }
+        },
+        "/task/item/note/{itemId}": {
+            "put": {
+                "operationId": "AuthController_addOrUpdateReportForItem",
+                "parameters": [
+                    {
+                        "name": "itemId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddNoteDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            }
+        },
+        "/task/subitem": {
+            "post": {
+                "operationId": "AuthController_addSubItem",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddSubItemDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Task"
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearer": {
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "type": "http"
+            }
+        },
+        "schemas": {
+            "SignUpDto": {
+                "type": "object",
+                "required": [
+                    "username",
+                    "password",
+                    "repeatPassword",
+                    "email"
+                ],
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "mohammad"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "1qaz!QAZ"
+                    },
+                    "repeatPassword": {
+                        "type": "string",
+                        "example": "1qaz!QAZ"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "mohammad@gmail.com"
+                    }
+                }
+            },
+            "LogInDto": {
+                "type": "object",
+                "required": [
+                    "username",
+                    "password"
+                ],
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "mohammad"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "1qaz!QAZ"
+                    }
+                }
+            },
+            "ActiveUserDto": {
+                "type": "object",
+                "required": [
+                    "username",
+                    "setActive"
+                ],
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "mohammad"
+                    },
+                    "setActive": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                }
+            },
+            "ProfileDto": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "job": {
+                        "type": "string"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "birthday": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "AddItemDto": {
+                "type": "object",
+                "properties": {
+                    "itemType": {
+                        "type": "string",
+                        "enum": [
+                            "Task",
+                            "Project",
+                            "Portfolio",
+                            "Other"
+                        ],
+                        "example": "Task"
+                    },
+                    "itemTitle": {
+                        "type": "string",
+                        "example": "Design database schema"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-08-15T17:00:00Z"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "Backlog",
+                            "In Progres",
+                            "Done"
+                        ],
+                        "example": "Backlog"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": [
+                            "High",
+                            "Medium",
+                            "Low"
+                        ],
+                        "example": "high"
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "backend"
+                    },
+                    "shareWith": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "username": {
+                                    "type": "string",
+                                    "example": "ali"
+                                },
+                                "accessibility": {
+                                    "type": "string",
+                                    "enum": [
+                                        "viewer",
+                                        "editor"
+                                    ],
+                                    "example": "viewer"
+                                }
+                            }
+                        }
+                    },
+                    "backlog": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Q3-backlog",
+                            "tech-debt",
+                            "feature-requests"
+                        ]
+                    }
+                }
+            },
+            "AddSubItemDto": {
+                "type": "object",
+                "properties": {
+                    "parentItemId": {
+                        "type": "string"
+                    },
+                    "childItemId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "AddNoteDto": {
+                "type": "object",
+                "properties": {
+                    "note": {
+                        "type": "string"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "AddReportDto": {
+                "type": "object",
+                "properties": {
+                    "report": {
+                        "type": "string"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ProfileImageDto": {
+                "type": "object",
+                "required": [
+                    "profileImage"
+                ],
+                "properties": {
+                    "profileImage": {
+                        "type": "string",
+                        "format": "binary"
+                    }
+                }
+            }
+        }
+    }
+}
