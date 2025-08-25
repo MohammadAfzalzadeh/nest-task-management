@@ -58,10 +58,10 @@ export class MeetService {
   }
 
   async getMeetDetail(meetId: string, isOwner: boolean = false) {
-    let meetQueryBuilder = await this.meetRepo.createQueryBuilder('meet');
+    let meetQueryBuilder = this.meetRepo.createQueryBuilder('meet');
     if (isOwner)
       meetQueryBuilder = meetQueryBuilder.addSelect('meet.descriptionHistory');
-    const meet = meetQueryBuilder
+    const meet = await meetQueryBuilder
       .where('meet.id = :id', { id: meetId })
       .getOne();
 
