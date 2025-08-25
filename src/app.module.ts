@@ -6,6 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TaskController } from './task/task.controller';
 import { TaskModule } from './task/task.module';
+import { MeetController } from './meet/meet.controller';
+import { MeetModule } from './meet/meet.module';
 
 @Module({
   imports: [
@@ -29,8 +31,9 @@ import { TaskModule } from './task/task.module';
       }),
     }),
     TaskModule,
+    MeetModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, MeetController],
   providers: [AppService],
 })
 export class AppModule {}

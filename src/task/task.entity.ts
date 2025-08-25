@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 import { TaskShareEntity } from './task-share.entity';
+import { MeetEntity } from 'src/meet/meet.entity';
 
 export enum ItemType {
   Task = 'Task',
@@ -95,6 +96,9 @@ export class TaskEntity {
 
   @OneToMany(() => TaskEntity, (task) => task.parentTask, { cascade: true })
   subTasks: TaskEntity[];
+
+  @OneToMany(() => MeetEntity, meet => meet.task)
+  meets: MeetEntity[];
 
   static subtaskToJson(subTasks: TaskEntity) {
     return {
