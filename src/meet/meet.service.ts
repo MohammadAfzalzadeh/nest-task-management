@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityNotFoundError, Repository } from 'typeorm';
 import { MeetEntity, MeetStatus } from './meet.entity';
 import { TaskEntity } from 'src/task/task.entity';
 import { CreateMeetDto } from './dto/create-meet.dto';
 import { UpdateMeetDto } from './dto/update-meet.dto';
+import { Accessibility, TaskShareEntity } from 'src/task/task-share.entity';
 
 @Injectable()
 export class MeetService {
@@ -13,14 +18,31 @@ export class MeetService {
     private meetRepo: Repository<MeetEntity>,
     @InjectRepository(TaskEntity)
     private taskRepo: Repository<TaskEntity>,
+    @InjectRepository(TaskShareEntity)
+    private shareRepo: Repository<TaskShareEntity>,
   ) {}
+  private async checkUserAccess(username, taskId) {
+    try {
+      return (
+        (
+          await this.shareRepo.findOneOrFail({
+            where: { user: { username }, task: { id: taskId } },
+            select: { accessibility: true },
+          })
+        ).accessibility === Accessibility.Editor
+      );
+    } catch (e) {
+      if (e instanceof EntityNotFoundError) {
+        throw new ForbiddenException(
+          'task not found or you have not access to create meet for it.',
+        );
+      }
+      throw e;
+    }
+  }
+  async createMeet(taskId: string, dto: CreateMeetDto, creator: string) {
+    const isOwner = await this.checkUserAccess(creator, taskId);
 
-  async createMeet(
-    taskId: string,
-    dto: CreateMeetDto,
-    creator: string,
-    isOwner: boolean = false,
-  ) {
     const task = await this.taskRepo.findOne({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Task not found');
 
@@ -57,7 +79,8 @@ export class MeetService {
     }));
   }
 
-  async getMeetDetail(meetId: string, isOwner: boolean = false) {
+  async getMeetDetail(meetId: string, username: string) {
+    const isOwner = await this.checkUserAccess(username, taskId);
     let meetQueryBuilder = this.meetRepo.createQueryBuilder('meet');
     if (isOwner)
       meetQueryBuilder = meetQueryBuilder.addSelect('meet.descriptionHistory');
@@ -69,11 +92,8 @@ export class MeetService {
     return meet;
   }
 
-  async updateMeet(
-    meetId: string,
-    dto: UpdateMeetDto,
-    isOwner: boolean = false,
-  ) {
+  async updateMeet(meetId: string, dto: UpdateMeetDto, username: string) {
+    const isOwner = await this.checkUserAccess(username, taskId);
     const meet = await this.meetRepo.findOne({ where: { id: meetId } });
     if (!meet) throw new NotFoundException('Meet not found');
 
