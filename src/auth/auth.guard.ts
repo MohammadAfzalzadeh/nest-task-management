@@ -1,4 +1,3 @@
-
 import {
   CanActivate,
   ExecutionContext,
@@ -13,20 +12,17 @@ export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
-
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = request.cookies['jwt']
+    const token = request.cookies['jwt'];
     if (!token) {
       throw new UnauthorizedException();
     }
     try {
-      
       const secret = this.configService.get<string>('JWT_SECRET');
-      request['user'] = await this.jwtService.verifyAsync( token, { secret } );
-
+      request['user'] = await this.jwtService.verifyAsync(token, { secret });
     } catch {
       throw new UnauthorizedException();
     }

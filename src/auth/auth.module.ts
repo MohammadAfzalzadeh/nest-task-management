@@ -7,8 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthEntity } from './auth.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TaskShareEntity } from '../task/task-share.entity'
-
+import { TaskShareEntity } from '../task/task-share.entity';
 
 @Module({
   imports: [
@@ -34,12 +33,11 @@ import { TaskShareEntity } from '../task/task-share.entity'
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET'),
         signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN') },
-
       }),
     }),
   ],
   providers: [AuthService, VerificationCodeService],
   controllers: [AuthController],
-  exports: [JwtModule] 
+  exports: [JwtModule],
 })
 export class AuthModule {}

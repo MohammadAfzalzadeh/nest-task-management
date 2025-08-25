@@ -5,7 +5,7 @@ import * as NodeCache from 'node-cache';
 @Injectable()
 export class VerificationCodeService {
   private cache = new NodeCache({ stdTTL: 300, checkperiod: 60 }); // TTL in seconds
-  
+
   constructor(private readonly mailerService: MailerService) {}
 
   generateCode(email: string): string {

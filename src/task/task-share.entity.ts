@@ -1,10 +1,16 @@
-import { Entity, ManyToOne, Column, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  ManyToOne,
+  Column,
+  PrimaryGeneratedColumn,
+  JoinColumn,
+} from 'typeorm';
 import { TaskEntity } from './task.entity';
 import { AuthEntity } from '../auth/auth.entity';
 
 export enum Accessibility {
-    Viewer = 'viewer',
-    Editor = 'editor',
+  Viewer = 'viewer',
+  Editor = 'editor',
 }
 
 @Entity()
@@ -12,7 +18,9 @@ export class TaskShareEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => TaskEntity, (task) => task.sharedWith, { onDelete: 'CASCADE' })
+  @ManyToOne(() => TaskEntity, (task) => task.sharedWith, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'taskId' })
   task: TaskEntity;
 

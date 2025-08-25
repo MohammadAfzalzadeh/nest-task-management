@@ -7,11 +7,9 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { ItemType, Status, Priority } from '../task.entity'
-import { Accessibility } from '../task-share.entity'
+import { ItemType, Status, Priority } from '../task.entity';
+import { Accessibility } from '../task-share.entity';
 import { Type } from 'class-transformer';
-
-
 
 export class ShareWithDto {
   @ApiProperty({ example: 'ali' })

@@ -4,13 +4,13 @@ import {
   PrimaryGeneratedColumn,
   OneToMany,
   JoinColumn,
-  ManyToOne
+  ManyToOne,
 } from 'typeorm';
 import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 
 import { TaskShareEntity } from './task-share.entity';
-  
+
 export enum ItemType {
   Task = 'Task',
   Project = 'Project',
@@ -30,8 +30,13 @@ export enum Priority {
   Low = 'Low',
 }
 
-export class TaskReport{
-  constructor(text:string, username:string, id?:string, createDate?:string) {
+export class TaskReport {
+  constructor(
+    text: string,
+    username: string,
+    id?: string,
+    createDate?: string,
+  ) {
     this.text = text;
     this.id = id || uuidv4();
     this.userCreator = username;
@@ -45,7 +50,7 @@ export class TaskReport{
   createDate: string;
   lastModifyDate: string;
 }
-  
+
 @Entity()
 export class TaskEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -72,31 +77,34 @@ export class TaskEntity {
   @Column('text', { array: true, nullable: true })
   backlog: string[];
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   note?: string;
 
   @OneToMany(() => TaskShareEntity, (share) => share.task, { cascade: true })
   sharedWith: TaskShareEntity[];
-  
+
   @Column('jsonb', { nullable: true })
   reportList?: TaskReport[];
 
-  @ManyToOne(() => TaskEntity, (task) => task.subTasks, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => TaskEntity, (task) => task.subTasks, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'parentTaskId' })
   parentTask?: TaskEntity;
 
   @OneToMany(() => TaskEntity, (task) => task.parentTask, { cascade: true })
   subTasks: TaskEntity[];
 
-  static subtaskToJson(subTasks:TaskEntity){
+  static subtaskToJson(subTasks: TaskEntity) {
     return {
-      id : subTasks.id, 
-      itemType : subTasks.itemType, 
-      itemTitle : subTasks.itemTitle,
-      category : subTasks.category,
-      priority : subTasks.priority,
-      status : subTasks.status
-    }
+      id: subTasks.id,
+      itemType: subTasks.itemType,
+      itemTitle: subTasks.itemTitle,
+      category: subTasks.category,
+      priority: subTasks.priority,
+      status: subTasks.status,
+    };
   }
   toJSON() {
     return {
@@ -108,13 +116,19 @@ export class TaskEntity {
       priority: this.priority,
       category: this.category,
       backlog: this.backlog,
-      sharedWith: this.sharedWith?.map(share => ({
-        username : share.user.username ,
-        accessibility : share.accessibility,
+      sharedWith: this.sharedWith?.map((share) => ({
+        username: share.user.username,
+        accessibility: share.accessibility,
       })),
-      report: this.reportList?.sort((a, b) => new Date(a.createDate).getTime() - new Date(b.createDate).getTime()) || [],
-      note: this.note || '' , 
-      subTasks: this.subTasks?.map(subTasks =>  TaskEntity.subtaskToJson(subTasks))
+      report:
+        this.reportList?.sort(
+          (a, b) =>
+            new Date(a.createDate).getTime() - new Date(b.createDate).getTime(),
+        ) || [],
+      note: this.note || '',
+      subTasks: this.subTasks?.map((subTasks) =>
+        TaskEntity.subtaskToJson(subTasks),
+      ),
     };
   }
 }

@@ -2,109 +2,128 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  NotFoundException
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TaskEntity ,TaskReport ,Status , Priority } from './task.entity';
+import { TaskEntity, TaskReport, Status, Priority } from './task.entity';
 import { Repository } from 'typeorm';
 import { AddItemDto } from './dto/add-item.dto';
-import {
-  Accessibility,
-  TaskShareEntity
-} from './task-share.entity';
+import { Accessibility, TaskShareEntity } from './task-share.entity';
 import { AuthEntity } from '../auth/auth.entity';
 import {
   UpdateAccessibility,
   UpdateItemDto,
-  UpdateShareWithDto
+  UpdateShareWithDto,
 } from './dto/update-item.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { AddReportDto } from './dto/add-report.dto';
 import { AddSubItemDto } from './dto/add_sub_item.dto';
-
 
 @Injectable()
 export class TaskService {
   async addSubTask(dto: AddSubItemDto) {
     const parentTask = await this.taskRepo.findOneOrFail({
       where: {
-        id: dto.parentItemId
-      }
+        id: dto.parentItemId,
+      },
     });
-    const childTask = await this.createTask(dto) 
-    parentTask.sharedWith = await this.shareRepo.find({where:{task:parentTask}})
+    const childTask = await this.createTask(dto);
+    parentTask.sharedWith = await this.shareRepo.find({
+      where: { task: parentTask },
+    });
     await this.checkUpdateConditions(parentTask, childTask);
     childTask.parentTask = parentTask;
-    parentTask.subTasks = (await this.taskRepo.find({where: {parentTask: parentTask}})) || []
+    parentTask.subTasks =
+      (await this.taskRepo.find({ where: { parentTask: parentTask } })) || [];
     parentTask.subTasks.push(childTask);
     await this.taskRepo.save(childTask);
     return await this.taskRepo.save(parentTask);
   }
-  async updateTaskReport(itemId: string, username: string, dto: UpdateReportDto) {
+  async updateTaskReport(
+    itemId: string,
+    username: string,
+    dto: UpdateReportDto,
+  ) {
     const task = await this.taskRepo.findOneOrFail({
       where: {
-        id: itemId
-      }
+        id: itemId,
+      },
     });
-    const prvReport = task.reportList?.find(report => report.id === dto.id && report.userCreator === username)
-    if (prvReport){
-      const report = new TaskReport(dto.report,username, dto.id , prvReport.createDate)
-      task.reportList = task.reportList?.filter(report => report.id !== dto.id) || []
+    const prvReport = task.reportList?.find(
+      (report) => report.id === dto.id && report.userCreator === username,
+    );
+    if (prvReport) {
+      const report = new TaskReport(
+        dto.report,
+        username,
+        dto.id,
+        prvReport.createDate,
+      );
+      task.reportList =
+        task.reportList?.filter((report) => report.id !== dto.id) || [];
       task.reportList.push(report);
       return await this.taskRepo.save(task);
     }
-    throw new ForbiddenException('report not found or you have not access to edit it')
+    throw new ForbiddenException(
+      'report not found or you have not access to edit it',
+    );
   }
   async addTaskReport(itemId: string, username: string, dto: AddReportDto) {
     const task = await this.taskRepo.findOneOrFail({
       where: {
-        id: itemId
-      }
+        id: itemId,
+      },
     });
-    const report = new TaskReport(dto.report, username)
+    const report = new TaskReport(dto.report, username);
     task.reportList ||= [];
     task.reportList.push(report);
     return await this.taskRepo.save(task);
   }
 
   constructor(
-    @InjectRepository(TaskEntity) private readonly taskRepo: Repository < TaskEntity > ,
+    @InjectRepository(TaskEntity)
+    private readonly taskRepo: Repository<TaskEntity>,
 
-    @InjectRepository(TaskShareEntity) private readonly shareRepo: Repository < TaskShareEntity > ,
+    @InjectRepository(TaskShareEntity)
+    private readonly shareRepo: Repository<TaskShareEntity>,
 
-    @InjectRepository(AuthEntity) private readonly userRepo: Repository < AuthEntity > ,
+    @InjectRepository(AuthEntity)
+    private readonly userRepo: Repository<AuthEntity>,
   ) {}
 
-  isUserModifyAccess(username: string, itemId: string): Promise < TaskShareEntity > {
+  isUserModifyAccess(
+    username: string,
+    itemId: string,
+  ): Promise<TaskShareEntity> {
     return this.shareRepo.findOneOrFail({
       where: {
         task: {
-          id: itemId
+          id: itemId,
         },
         user: {
-          username
+          username,
         },
-        accessibility: Accessibility.Editor
-      }
-    })
+        accessibility: Accessibility.Editor,
+      },
+    });
   }
 
-  async updateTask(itemId: string, dto: UpdateItemDto): Promise < TaskEntity > {
+  async updateTask(itemId: string, dto: UpdateItemDto): Promise<TaskEntity> {
     const task = await this.taskRepo.findOneOrFail({
       where: {
-        id: itemId
-      }
+        id: itemId,
+      },
     });
 
-    if (task.parentTask){
-      await this.checkUpdateConditions(task.parentTask , task)
+    if (task.parentTask) {
+      await this.checkUpdateConditions(task.parentTask, task);
     }
 
-    task.subTasks = await this.taskRepo.find({where:{parentTask: task}});
+    task.subTasks = await this.taskRepo.find({ where: { parentTask: task } });
 
-    if (task.subTasks.length > 0){
-      for(const childTask of task.subTasks )
-        await this.checkUpdateConditions(task, childTask)
+    if (task.subTasks.length > 0) {
+      for (const childTask of task.subTasks)
+        await this.checkUpdateConditions(task, childTask);
     }
 
     task.itemType = dto.itemType || task.itemType;
@@ -124,46 +143,46 @@ export class TaskService {
       const prvTaskShare = await this.shareRepo.findOne({
         where: {
           task: {
-            id: itemId
+            id: itemId,
           },
           user: {
-            username: taskShare.username
-          }
-        }
-      })
+            username: taskShare.username,
+          },
+        },
+      });
       switch (taskShare.accessibility) {
         case UpdateAccessibility.Editor:
         case UpdateAccessibility.Viewer:
           if (prvTaskShare) {
-            prvTaskShare.accessibility = taskShare.accessibility as unknown as Accessibility;
-            this.shareRepo.save(prvTaskShare)
+            prvTaskShare.accessibility =
+              taskShare.accessibility as unknown as Accessibility;
+            this.shareRepo.save(prvTaskShare);
           } else {
             const taskShareEntity = new TaskShareEntity();
             taskShareEntity.task = await this.taskRepo.findOneOrFail({
               where: {
-                id: itemId
-              }
-            })
+                id: itemId,
+              },
+            });
             taskShareEntity.user = await this.userRepo.findOneOrFail({
               where: {
-                username: taskShare.username
-              }
-            })
-            taskShareEntity.accessibility = taskShare.accessibility as unknown as Accessibility;
-            this.shareRepo.save(taskShareEntity)
+                username: taskShare.username,
+              },
+            });
+            taskShareEntity.accessibility =
+              taskShare.accessibility as unknown as Accessibility;
+            this.shareRepo.save(taskShareEntity);
           }
           break;
         case UpdateAccessibility.Delete:
-          if (prvTaskShare)
-            this.shareRepo.delete(prvTaskShare.id)
+          if (prvTaskShare) this.shareRepo.delete(prvTaskShare.id);
 
           break;
-
       }
     }
   }
 
-  async createTask(dto: AddItemDto): Promise < TaskEntity > {
+  async createTask(dto: AddItemDto): Promise<TaskEntity> {
     const task = new TaskEntity();
 
     task.itemType = dto.itemType;
@@ -180,12 +199,14 @@ export class TaskService {
       for (const shareDto of dto.shareWith) {
         const user = await this.userRepo.findOne({
           where: {
-            username: shareDto.username
-          }
+            username: shareDto.username,
+          },
         });
 
         if (!user) {
-          throw new NotFoundException(`User with username "${shareDto.username}" not found`);
+          throw new NotFoundException(
+            `User with username "${shareDto.username}" not found`,
+          );
         }
 
         const share = new TaskShareEntity();
@@ -201,13 +222,12 @@ export class TaskService {
     return await this.taskRepo.save(task);
   }
 
-
   getTasks(username: string) {
     return this.shareRepo
       .createQueryBuilder('share')
       .innerJoin('share.task', 'task')
       .where('share.username = :username', {
-        username
+        username,
       })
       .andWhere('task.parentTask IS NULL')
       .select([
@@ -217,7 +237,8 @@ export class TaskService {
         'task.category',
         'task.priority',
         'task.status',
-      ]).getRawMany();
+      ])
+      .getRawMany();
   }
 
   async getTaskDetail(username: string, taskId: string) {
@@ -230,42 +251,52 @@ export class TaskService {
       .getOne();
   }
 
-  private checkUpdateConditions(parentTask: TaskEntity, childTask: TaskEntity): void {
+  private checkUpdateConditions(
+    parentTask: TaskEntity,
+    childTask: TaskEntity,
+  ): void {
     const errors: string[] = [];
     const RANKS = {
       status: {
         [Status.Backlog]: 0,
         [Status.InProgress]: 1,
-        [Status.Done]: 2
+        [Status.Done]: 2,
       },
-      priority:{
+      priority: {
         [Priority.Low]: 0,
         [Priority.Medium]: 1,
-        [Priority.High]: 2
+        [Priority.High]: 2,
       },
       accessibility: {
         [Accessibility.Viewer]: 0,
-        [Accessibility.Editor]: 1
-      }
+        [Accessibility.Editor]: 1,
+      },
     };
     // Validate priority
-    if (!RANKS.priority[parentTask.priority] || !RANKS.priority[childTask.priority]) {
+    if (
+      !RANKS.priority[parentTask.priority] ||
+      !RANKS.priority[childTask.priority]
+    ) {
       errors.push('Invalid priority value for parent or child task.');
-    } else if (RANKS.priority[parentTask.priority] > RANKS.priority[childTask.priority]) {
+    } else if (
+      RANKS.priority[parentTask.priority] > RANKS.priority[childTask.priority]
+    ) {
       errors.push(
         `Child task priority (${childTask.priority}) cannot be lower than parent task priority (${parentTask.priority}).`,
       );
     }
-  
+
     // Validate status
     if (!RANKS.status[parentTask.status] || !RANKS.status[childTask.status]) {
       errors.push('Invalid status value for parent or child task.');
-    } else if (RANKS.status[parentTask.status] > RANKS.status[childTask.status]) {
+    } else if (
+      RANKS.status[parentTask.status] > RANKS.status[childTask.status]
+    ) {
       errors.push(
         `Child task status (${childTask.status}) cannot precede parent task status (${parentTask.status}).`,
       );
     }
-  
+
     // Validate deadline
     const parentDeadline = new Date(parentTask.deadline);
     const childDeadline = new Date(childTask.deadline);
@@ -278,18 +309,24 @@ export class TaskService {
         }).`,
       );
     }
-  
+
     // Validate shared access
     const badShares: string[] = [];
     for (const childShare of childTask.sharedWith) {
-      if (!childShare.user?.username || !RANKS.accessibility[childShare.accessibility]) {
-        errors.push(`Invalid shared user or accessibility for child task: ${JSON.stringify(childShare)}`);
+      if (
+        !childShare.user?.username ||
+        !RANKS.accessibility[childShare.accessibility]
+      ) {
+        errors.push(
+          `Invalid shared user or accessibility for child task: ${JSON.stringify(childShare)}`,
+        );
         continue;
       }
       const parentShare = parentTask.sharedWith.find(
         (parentShare) =>
           parentShare.user?.username === childShare.user.username &&
-          RANKS.accessibility[parentShare.accessibility] >= RANKS.accessibility[childShare.accessibility],
+          RANKS.accessibility[parentShare.accessibility] >=
+            RANKS.accessibility[childShare.accessibility],
       );
       if (!parentShare) {
         badShares.push(childShare.user.username);
@@ -301,10 +338,12 @@ export class TaskService {
           `All users shared with the child task must have equal or higher access to the parent task.`,
       );
     }
-  
+
     // Throw all errors if any exist
     if (errors.length > 0) {
-      throw new BadRequestException(`Validation failed for child task:\n- ${errors.join('\n- ')}`);
+      throw new BadRequestException(
+        `Validation failed for child task:\n- ${errors.join('\n- ')}`,
+      );
     }
   }
 }

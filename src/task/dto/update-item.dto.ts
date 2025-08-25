@@ -7,13 +7,13 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { ItemType, Status, Priority } from '../task.entity'
+import { ItemType, Status, Priority } from '../task.entity';
 import { Type } from 'class-transformer';
 
 export enum UpdateAccessibility {
   Viewer = 'viewer',
   Editor = 'editor',
-  Delete = 'none'
+  Delete = 'none',
 }
 
 export class UpdateShareWithDto {
@@ -67,7 +67,7 @@ export class UpdateItemDto {
   backlog?: string[];
 
   @ApiProperty({
-    type: [UpdateShareWithDto]
+    type: [UpdateShareWithDto],
   })
   @IsOptional()
   @IsArray()
@@ -78,5 +78,5 @@ export class UpdateItemDto {
   @ApiProperty({ example: 'test note...' })
   @IsOptional()
   @IsString()
-  note?: string;  
+  note?: string;
 }

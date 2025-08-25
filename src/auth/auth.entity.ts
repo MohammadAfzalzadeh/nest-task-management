@@ -1,45 +1,43 @@
-import { Column, Entity, PrimaryColumn , OneToMany } from 'typeorm';
-import { TaskShareEntity } from '../task/task-share.entity'
+import { Column, Entity, PrimaryColumn, OneToMany } from 'typeorm';
+import { TaskShareEntity } from '../task/task-share.entity';
 
-export enum RoleEntity{
-  user = "user",
-  admin = "admin"
+export enum RoleEntity {
+  user = 'user',
+  admin = 'admin',
 }
 
 @Entity()
-export class AuthEntity{
+export class AuthEntity {
   @PrimaryColumn()
-  username:string;
+  username: string;
 
   @Column({ select: false })
-  password:string;
+  password: string;
 
   @Column({ nullable: true })
-  firstName?:string;
+  firstName?: string;
 
   @Column({ unique: true })
-  email:string;
+  email: string;
 
   @Column({ nullable: true })
-  lastName?:string;
+  lastName?: string;
 
   @Column({ nullable: true })
-  birthday?:Date;
+  birthday?: Date;
 
-  @Column({default:true})
-  isActive:boolean;
-
-  @Column({ nullable: true })
-  job?:string;
+  @Column({ default: true })
+  isActive: boolean;
 
   @Column({ nullable: true })
-  bio?:string;
+  job?: string;
 
-  @Column({default : RoleEntity.user})
-  role:RoleEntity;
+  @Column({ nullable: true })
+  bio?: string;
+
+  @Column({ default: RoleEntity.user })
+  role: RoleEntity;
 
   @OneToMany(() => TaskShareEntity, (share) => share.user)
   taskShares: TaskShareEntity[];
 }
-
-
