@@ -1,26 +1,33 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { TaskShareEntity } from '../task/task-share.entity';
 import { TaskEntity } from 'src/task/task.entity';
 
 export enum MeetStatus {
-  Pending="Pending",
-  OnCall="On Call",
-  Succeed="Succeed",
-  Canceld='Canceld'
+  Pending = 'Pending',
+  OnCall = 'On Call',
+  Succeed = 'Succeed',
+  Canceld = 'Canceld',
 }
 
 export enum MeetType {
-  Online="Online",
-  InPerson="In-person"
+  Online = 'Online',
+  InPerson = 'In-person',
 }
 
-export class MeetDescription{
+export class MeetDescription {
   time: string;
   by: string;
   text: string;
 }
 
-export class MeetAttender{
+export class MeetAttender {
   username: string;
   email: string;
 }
@@ -40,7 +47,7 @@ export class MeetEntity {
   reason: string;
 
   @Column()
-  stratTime: string;
+  startTime: string;
 
   @Column()
   endTime: string;
@@ -57,16 +64,16 @@ export class MeetEntity {
   @Column({ nullable: true })
   place?: string;
 
-  @Column('jsonb',{ nullable: true })
+  @Column('jsonb', { nullable: true })
   description?: MeetDescription;
 
-  @Column('jsonb', {select:false, default:[] })
+  @Column('jsonb', { select: false, default: [] })
   descriptionHistory: MeetDescription[];
 
-  @Column('jsonb', { default:[] })
-  attenders:MeetAttender[];
+  @Column('jsonb', { default: [] })
+  attenders: MeetAttender[];
 
-  @ManyToOne(() => TaskEntity, task => task.meets, { onDelete: 'CASCADE' })
+  @ManyToOne(() => TaskEntity, (task) => task.meets, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'TaskId' })
   task: TaskEntity;
 }
