@@ -97,7 +97,7 @@ export class TaskEntity {
   @OneToMany(() => TaskEntity, (task) => task.parentTask, { cascade: true })
   subTasks: TaskEntity[];
 
-  @OneToMany(() => MeetEntity, meet => meet.task)
+  @OneToMany(() => MeetEntity, (meet) => meet.task)
   meets: MeetEntity[];
 
   static subtaskToJson(subTasks: TaskEntity) {
