@@ -1,0 +1,693 @@
+{
+    "openapi": "3.0.0",
+    "paths": {
+        "/auth/signUp": {
+            "post": {
+                "operationId": "AuthController_signUp",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SignUpDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Auth"]
+            }
+        },
+        "/auth/logIn": {
+            "post": {
+                "operationId": "AuthController_logIn",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LogInDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Auth"]
+            }
+        },
+        "/auth/profile": {
+            "get": {
+                "operationId": "AuthController_getProfile",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Auth"]
+            },
+            "patch": {
+                "operationId": "AuthController_changeProfile",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Auth"]
+            }
+        },
+        "/auth/active": {
+            "patch": {
+                "operationId": "AuthController_activeUser",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ActiveUserDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Auth"]
+            }
+        },
+        "/auth/users": {
+            "get": {
+                "operationId": "AuthController_getAllUsers",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Auth"]
+            }
+        },
+        "/auth/role": {
+            "patch": {
+                "operationId": "AuthController_changeRole",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangeRole"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Auth"]
+            }
+        },
+        "/auth/image/{username}": {
+            "get": {
+                "operationId": "AuthController_getProfileImage",
+                "parameters": [{
+                    "name": "username",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                        "type": "string"
+                    }
+                }],
+                "responses": {
+                    "200": {
+                        "description": "Image file",
+                        "content": {
+                            "image/jpeg": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "image/png": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": ["Auth"]
+            }
+        },
+        "/auth/image": {
+            "post": {
+                "operationId": "AuthController_updateProfileImage",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileImageDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Auth"]
+            }
+        },
+        "/task/item": {
+            "post": {
+                "operationId": "TaskController_addItem",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddItemDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Task"]
+            },
+            "get": {
+                "operationId": "TaskController_getItems",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Task"]
+            }
+        },
+        "/task/item{itemId}": {
+            "patch": {
+                "operationId": "TaskController_updateItem",
+                "parameters": [{
+                    "name": "itemId",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                        "type": "string"
+                    }
+                }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateItemDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Task"]
+            },
+            "get": {
+                "operationId": "TaskController_getItemDetail",
+                "parameters": [{
+                    "name": "itemId",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                        "type": "string"
+                    }
+                }],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Task"]
+            }
+        },
+        "/task/report{itemId}": {
+            "post": {
+                "operationId": "TaskController_addReport",
+                "parameters": [{
+                    "name": "itemId",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                        "type": "string"
+                    }
+                }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddReportDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Task"]
+            },
+            "put": {
+                "operationId": "TaskController_updateReport",
+                "parameters": [{
+                    "name": "itemId",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                        "type": "string"
+                    }
+                }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateReportDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Task"]
+            }
+        },
+        "/task/subitem": {
+            "post": {
+                "operationId": "TaskController_addSubItem",
+                "parameters": [],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddSubItemDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": ""
+                    }
+                },
+                "tags": ["Task"]
+            }
+        }
+    },
+    "info": {
+        "title": "Task Management API",
+        "description": "API for managing tasks",
+        "version": "1.0",
+        "contact": {}
+    },
+    "tags": [],
+    "servers": [],
+    "components": {
+        "securitySchemes": {
+            "bearer": {
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "type": "http"
+            }
+        },
+        "schemas": {
+            "SignUpDto": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "mohammad",
+                        "description": "the unique username"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "1qaz!QAZ",
+                        "description": "strong password"
+                    },
+                    "repeatPassword": {
+                        "type": "string",
+                        "example": "1qaz!QAZ",
+                        "description": "repeat the password"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "mohamamd@gmail.com",
+                        "description": "a valid gmail"
+                    }
+                },
+                "required": ["username", "password", "repeatPassword", "email"]
+            },
+            "LogInDto": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "mohammad",
+                        "description": "username or email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "1qaz!QAZ",
+                        "description": "password for user"
+                    }
+                },
+                "required": ["username", "password"]
+            },
+            "ActiveUserDto": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "mohammad",
+                        "description": "username need changes active or not active"
+                    },
+                    "setActive": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "boolean that show is user set to active or not active"
+                    }
+                },
+                "required": ["username", "setActive"]
+            },
+            "ChangeRole": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "mohammad",
+                        "description": "username need changes active or not active"
+                    },
+                    "role": {
+                        "type": "string",
+                        "example": "admin",
+                        "enum": ["user", "admin"],
+                        "description": "Role to assign to the user"
+                    }
+                },
+                "required": ["username", "role"]
+            },
+            "ProfileDto": {
+                "type": "object",
+                "properties": {
+                    "firstName": {
+                        "type": "string",
+                        "example": "mohammad",
+                        "description": "first name"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "example": "afzal",
+                        "description": "last name"
+                    },
+                    "email": {
+                        "type": "string",
+                        "example": "mohammad@gmail.com",
+                        "description": "email"
+                    },
+                    "job": {
+                        "type": "string",
+                        "example": "data engineer",
+                        "description": "job"
+                    },
+                    "bio": {
+                        "type": "string",
+                        "example": "bio...",
+                        "description": "bio"
+                    },
+                    "birthday": {
+                        "format": "date-time",
+                        "type": "string",
+                        "example": "2001-10-13",
+                        "description": "birthday"
+                    }
+                }
+            },
+            "ProfileImageDto": {
+                "type": "object",
+                "properties": {
+                    "profileImage": {
+                        "type": "string",
+                        "description": "image for this profile",
+                        "format": "binary"
+                    }
+                },
+                "required": ["profileImage"]
+            },
+            "ShareWithDto": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "ali"
+                    },
+                    "accessibility": {
+                        "type": "string",
+                        "enum": ["viewer", "editor"],
+                        "example": "viewer"
+                    }
+                },
+                "required": ["username", "accessibility"]
+            },
+            "AddItemDto": {
+                "type": "object",
+                "properties": {
+                    "itemType": {
+                        "type": "string",
+                        "enum": ["Task", "Project", "Portfolio", "Other"],
+                        "example": "Task"
+                    },
+                    "itemTitle": {
+                        "type": "string",
+                        "example": "Design database schema"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-08-15 17:00:00"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["Backlog", "In Progres", "Done"],
+                        "example": "Backlog"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": ["High", "Medium", "Low"],
+                        "example": "High"
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "backend"
+                    },
+                    "shareWith": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShareWithDto"
+                        }
+                    },
+                    "backlog": {
+                        "example": ["Q3-backlog", "tech-debt", "feature-requests"],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": ["itemType", "itemTitle", "deadline", "status", "priority", "category", "shareWith", "backlog"]
+            },
+            "UpdateShareWithDto": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "ali"
+                    },
+                    "accessibility": {
+                        "type": "string",
+                        "enum": ["viewer", "editor", "none"],
+                        "example": "viewer"
+                    }
+                },
+                "required": ["username", "accessibility"]
+            },
+            "UpdateItemDto": {
+                "type": "object",
+                "properties": {
+                    "itemType": {
+                        "type": "string",
+                        "enum": ["Task", "Project", "Portfolio", "Other"],
+                        "example": "Task"
+                    },
+                    "itemTitle": {
+                        "type": "string",
+                        "example": "Design database schema"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-08-15 17:00:00"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["Backlog", "In Progres", "Done"],
+                        "example": "Backlog"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": ["High", "Medium", "Low"],
+                        "example": "High"
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "backend"
+                    },
+                    "backlog": {
+                        "example": ["Q3-backlog", "tech-debt", "feature-requests"],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "shareWith": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UpdateShareWithDto"
+                        }
+                    },
+                    "note": {
+                        "type": "string",
+                        "example": "test note..."
+                    }
+                },
+                "required": ["itemType", "itemTitle", "deadline", "status", "priority", "category", "backlog", "shareWith", "note"]
+            },
+            "AddReportDto": {
+                "type": "object",
+                "properties": {
+                    "report": {
+                        "type": "string",
+                        "example": "some report for now ..."
+                    }
+                },
+                "required": ["report"]
+            },
+            "UpdateReportDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "5319cfcd-f809-4a8b-a077-6a2d30c7ba1c"
+                    },
+                    "report": {
+                        "type": "string",
+                        "example": "some report for now ..."
+                    }
+                },
+                "required": ["id", "report"]
+            },
+            "AddSubItemDto": {
+                "type": "object",
+                "properties": {
+                    "itemType": {
+                        "type": "string",
+                        "enum": ["Task", "Project", "Portfolio", "Other"],
+                        "example": "Task"
+                    },
+                    "itemTitle": {
+                        "type": "string",
+                        "example": "Design database schema"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-08-15 17:00:00"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["Backlog", "In Progres", "Done"],
+                        "example": "Backlog"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": ["High", "Medium", "Low"],
+                        "example": "High"
+                    },
+                    "category": {
+                        "type": "string",
+                        "example": "backend"
+                    },
+                    "shareWith": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ShareWithDto"
+                        }
+                    },
+                    "backlog": {
+                        "example": ["Q3-backlog", "tech-debt", "feature-requests"],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "parentItemId": {
+                        "type": "string",
+                        "example": "550e8400-e29b-41d4-a716-446655440000",
+                        "format": "uuid"
+                    }
+                },
+                "required": ["itemType", "itemTitle", "deadline", "status", "priority", "category", "shareWith", "backlog", "parentItemId"]
+            }
+        }
+    }
+}

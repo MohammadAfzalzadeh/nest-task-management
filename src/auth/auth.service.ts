@@ -31,7 +31,8 @@ export class AuthService {
     this.authDbInterface = new AuthDbInterface(this.authRepository)
   }
 
-  signUp(signUpDto: SignUpDto):Promise<AuthEntity[]> {
+  async signUp(signUpDto: SignUpDto):Promise<AuthEntity[]> {
+    await this.authDbInterface.checkUserExists(signUpDto.username , signUpDto.email);
     const data = this.destructDto2Entity(signUpDto);
     data.password = this.hashPass(data.password)
     return this.authDbInterface.addAuth(data);
@@ -50,13 +51,13 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  getProfile(userId:string):Promise<AuthEntity | null>{
-    return this.authDbInterface.getUser(userId)
+  getProfile(username:string):Promise<AuthEntity | null>{
+    return this.authDbInterface.getUser(username)
   }
 
-  async changeProfile(userId:string , profileDto:ProfileDto):Promise<AuthEntity[]>{
+  async changeProfile(username:string , profileDto:ProfileDto):Promise<AuthEntity[]>{
     let user:AuthEntity | null =
-      await this.authDbInterface.getUser(userId);
+      await this.authDbInterface.getUser(username);
     if (! user)
       throw new NotFoundException('this user id not found.')
 
@@ -67,7 +68,7 @@ export class AuthService {
 
   async activeUser(activeUserDto:ActiveUserDto){
     const user:AuthEntity | null =
-      await this.authDbInterface.getUser(activeUserDto.userId);
+      await this.authDbInterface.getUser(activeUserDto.username);
     if (! user)
       throw new NotFoundException('this user id not found.')
 
@@ -77,12 +78,12 @@ export class AuthService {
     )
 
     return {
-      userid: user.id,
+      username: user.username,
       isActive: user.isActive
     }
   }
 
-  getAllUsers():Promise<AuthEntity[]>{
+  getAllUsers():Promise<AuthEntity[] | null>{
     return this.authDbInterface.getAll()
   }
 
@@ -109,7 +110,6 @@ export class AuthService {
 
   private generateToken(user: any): Promise<string> {
     const payload = {
-      sub: user.id,
       username: user.username,
       role: user.role
     };

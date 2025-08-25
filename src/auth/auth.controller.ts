@@ -13,14 +13,16 @@ import {
   UploadedFile,
   MaxFileSizeValidator,
   ParseFilePipe,
-  FileTypeValidator
+  FileTypeValidator,
+  NotFoundException
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { VerificationCodeService } from './verificationCode.service';
 import { SignUpDto } from './dto/signUp.dto';
 import { LogInDto } from './dto/logIn.dto';
 import { ProfileImageDto } from './dto/image.dto'
 import { writeFile } from 'fs/promises';
-import { createReadStream } from 'fs'
+import { createReadStream, existsSync } from 'fs'
 import { Response as Res, Request as Req } from 'express';
 import { AuthGuard } from './auth.guard';
 import { env } from 'node:process';
@@ -34,6 +36,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { ApiProduces, ApiOkResponse} from '@nestjs/swagger';
 import * as path from 'node:path';
 
 const MAX_FILE_SIZE = parseInt(process.env.FILE_UPLOAD_MAX_SIZE_MB || '10') * 1024 * 1024
@@ -42,7 +45,8 @@ export class AuthController {
   private profileImageBasePath;
   constructor(
     private authService:AuthService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private verificationCodeService: VerificationCodeService
   ) {
     this.profileImageBasePath = this.configService.get('PROFILE_IMAGE_BASE_PATH')
   }
@@ -75,7 +79,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Get('/profile')
   async getProfile(@Request() req:Req){
-    const user = await this.authService.getProfile(req['user'].sub)
+    const user = await this.authService.getProfile(req['user'].username)
     if (! user)
       throw new UnauthorizedException('Invalid Token. Need to login again.!');
     return user
@@ -96,7 +100,7 @@ export class AuthController {
   @UseGuards(AuthGuard , RolesGuard)
   @Roles(RoleEntity.admin)
   @Get('/users')
-  async getAllUsers():Promise<AuthEntity[]>{
+  async getAllUsers():Promise<AuthEntity[]| null>{
     return this.authService.getAllUsers()
   }
 
@@ -108,14 +112,38 @@ export class AuthController {
   @UseGuards(AuthGuard)
   @Patch('/profile')
   async changeProfile(@Request() req:Req, @Body() profileDto:ProfileDto){
-    const userId = req['user'].sub
-    return this.authService.changeProfile(userId , profileDto)
+    const username = req['user'].username
+    return this.authService.changeProfile(username , profileDto)
   }
 
-  @Get('/image/:userId')
-  getProfileImage(@Param('userId') userId:string , @Response() res:Res){
-    const image = createReadStream(path.join(this.profileImageBasePath , userId));
-    image.pipe(res);
+  @Get('/image/:username')
+  @ApiOkResponse({
+    description: 'Image file',
+    content: {
+      'image/jpeg': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+      'image/png': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiProduces('image/jpeg', 'image/png') // Specify the possible MIME types
+  getProfileImage(@Param('username') username:string , @Response() res:Res){
+    const imagePath = path.join(this.profileImageBasePath , username)
+    if (existsSync(imagePath)){
+      res.setHeader('Content-Type', 'image/jpeg');
+      const image = createReadStream(imagePath);
+      image.pipe(res);
+    }else {
+      throw new NotFoundException('image not found.')
+    }
   }
   
   @UseGuards(AuthGuard)
@@ -136,9 +164,49 @@ export class AuthController {
     }),
   )
   profileImage: Express.Multer.File){
-    const userId = req['user'].sub
-    await writeFile(path.join(this.profileImageBasePath, userId ) , profileImage.buffer)
+    const username = req['user'].username
+    await writeFile(path.join(this.profileImageBasePath, username ) , profileImage.buffer)
     return {message : 'file uploaded succesfully.' }
 
   }
+
+  @Post('send-code')
+  @ApiBody({
+    description: 'Email address to send the verification code to',
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+      },
+      required: ['email'],
+    },
+  })
+  async sendCode(@Body('email') email: string) {
+    const code = this.verificationCodeService.generateCode(email);
+
+    await this.verificationCodeService.sendCode(email, code);
+
+    return { message: 'Verification code sent' };
+  }
+
+  @Post('verify-code')
+  @ApiBody({
+    description: 'Email address to send the verification code to',
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        code: { type: 'string', example: '1234' },
+      },
+      required: ['email', 'code'],
+    },
+  })
+  verifyCode(@Body('email') email: string, @Body('code') code: string) {
+    const isValid = this.verificationCodeService.verifyCode(email, code);
+    if (!isValid)
+      throw new NotFoundException('Invalid or expired code');
+    return { message: 'Email verified successfully' };
+  }
+
+
 }

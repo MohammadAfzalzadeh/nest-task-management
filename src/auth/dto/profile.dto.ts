@@ -13,11 +13,6 @@ import { ApiProperty } from '@nestjs/swagger';
 export class ProfileDto{
   @IsOptional()
   @IsString()
-  @ApiProperty({ example: 'mohammad', description: 'username' , required: false })
-  username?:string;
-
-  @IsOptional()
-  @IsString()
   @ApiProperty({ example: 'mohammad', description: 'first name' , required: false })
   firstName?:string;
 

@@ -9,8 +9,8 @@ import { RoleEntity } from '../auth.entity';
 export class ChangeRole{
   @IsNotEmpty()
   @IsUUID()
-  @ApiProperty({ example: '561badb8-b8e0-40b5-b607-28456830733b', description: 'id for user need changes active or not active' , required: true })
-  userId:string;
+  @ApiProperty({ example: 'mohammad', description: 'username need changes active or not active' , required: true })
+  username:string;
 
 
   @IsNotEmpty()

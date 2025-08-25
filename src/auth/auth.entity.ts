@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn , OneToMany } from 'typeorm';
+import { TaskShareEntity } from '../task/task-share.entity'
 
 export enum RoleEntity{
   user = "user",
@@ -7,10 +8,7 @@ export enum RoleEntity{
 
 @Entity()
 export class AuthEntity{
-  @PrimaryGeneratedColumn('uuid')
-  id:string;
-
-  @Column()
+  @PrimaryColumn()
   username:string;
 
   @Column({ select: false })
@@ -19,7 +17,7 @@ export class AuthEntity{
   @Column({ nullable: true })
   firstName?:string;
 
-  @Column()
+  @Column({ unique: true })
   email:string;
 
   @Column({ nullable: true })
@@ -39,6 +37,9 @@ export class AuthEntity{
 
   @Column({default : RoleEntity.user})
   role:RoleEntity;
+
+  @OneToMany(() => TaskShareEntity, (share) => share.user)
+  taskShares: TaskShareEntity[];
 }
 
 
