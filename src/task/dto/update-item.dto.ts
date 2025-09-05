@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsOptional,
@@ -26,6 +27,15 @@ export class UpdateShareWithDto {
   accessibility: UpdateAccessibility;
 }
 
+export class UpdateAssigneeDto {
+  @ApiProperty({ example: 'ali' })
+  @IsString()
+  username: string;
+
+  @ApiProperty({ type: Boolean, example: 'true' })
+  @IsBoolean()
+  addAssignee:boolean;
+}
 export class UpdateItemDto {
   @ApiProperty({ enum: ItemType, example: 'Task' })
   @IsOptional()
@@ -78,5 +88,15 @@ export class UpdateItemDto {
   @ApiProperty({ example: 'test note...' })
   @IsOptional()
   @IsString()
-  note?: string;
+  note?: string;  
+
+  @ApiProperty({
+    type: [String],
+    example: ['ali', 'mohammad'],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateAssigneeDto)
+  assignees?:UpdateAssigneeDto[];
 }

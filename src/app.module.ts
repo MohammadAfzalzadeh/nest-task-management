@@ -33,7 +33,7 @@ import { MeetModule } from './meet/meet.module';
     TaskModule,
     MeetModule,
   ],
-  controllers: [AppController, MeetController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

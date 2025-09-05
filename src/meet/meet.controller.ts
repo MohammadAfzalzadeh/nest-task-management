@@ -14,12 +14,16 @@ import { MeetService } from './meet.service';
 import { CreateMeetDto } from './dto/create-meet.dto';
 import { UpdateMeetDto } from './dto/update-meet.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller()
 export class MeetController {
   constructor(private readonly meetService: MeetService) {}
 
   // 1. Create meet for task
+  @ApiBody({
+      type: CreateMeetDto,
+  })
   @UseGuards(AuthGuard)
   @Post('meets/:taskId')
   createMeet(
@@ -42,10 +46,14 @@ export class MeetController {
   @UseGuards(AuthGuard)
   @Get('meets/:id')
   getMeetDetail(@Request() req: Req, @Param('id') id: string) {
-    return this.meetService.getMeetDetail(id);
+    const username = req['user'].username;
+    return this.meetService.getMeetDetail(id , username);
   }
 
   // 4. Update meet
+  @ApiBody({
+    type: UpdateMeetDto,
+})
   @UseGuards(AuthGuard)
   @Patch('meets/:id')
   updateMeet(
@@ -53,6 +61,7 @@ export class MeetController {
     @Param('id') id: string,
     @Body() dto: UpdateMeetDto,
   ) {
-    return this.meetService.updateMeet(id, dto);
+    const username = req['user'].username;
+    return this.meetService.updateMeet(id, dto, username);
   }
 }

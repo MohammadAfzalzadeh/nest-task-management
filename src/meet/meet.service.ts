@@ -21,6 +21,10 @@ export class MeetService {
     @InjectRepository(TaskShareEntity)
     private shareRepo: Repository<TaskShareEntity>,
   ) {}
+  private async getMeetTask(meetId){
+    const meet = await this.meetRepo.findOneOrFail({where: {id:meetId}})
+    return meet.task.id
+  }
   private async checkUserAccess(username, taskId) {
     try {
       return (
@@ -80,6 +84,7 @@ export class MeetService {
   }
 
   async getMeetDetail(meetId: string, username: string) {
+    const taskId = await this.getMeetTask(meetId)
     const isOwner = await this.checkUserAccess(username, taskId);
     let meetQueryBuilder = this.meetRepo.createQueryBuilder('meet');
     if (isOwner)
@@ -93,6 +98,7 @@ export class MeetService {
   }
 
   async updateMeet(meetId: string, dto: UpdateMeetDto, username: string) {
+    const taskId = await this.getMeetTask(meetId)
     const isOwner = await this.checkUserAccess(username, taskId);
     const meet = await this.meetRepo.findOne({ where: { id: meetId } });
     if (!meet) throw new NotFoundException('Meet not found');

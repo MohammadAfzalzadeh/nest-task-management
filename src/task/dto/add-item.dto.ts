@@ -62,4 +62,12 @@ export class AddItemDto {
   @IsArray()
   @IsString({ each: true })
   backlog: string[];
+
+  @ApiProperty({
+    type: [String],
+    example: ['ali', 'mohammad'],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  assignes:string[];
 }

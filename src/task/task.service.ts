@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskEntity, TaskReport, Status, Priority } from './task.entity';
 import { Repository } from 'typeorm';
-import { AddItemDto } from './dto/add-item.dto';
+import { AddItemDto, ShareWithDto } from './dto/add-item.dto';
 import { Accessibility, TaskShareEntity } from './task-share.entity';
 import { AuthEntity } from '../auth/auth.entity';
 import {
@@ -21,13 +21,13 @@ import { AddSubItemDto } from './dto/add_sub_item.dto';
 
 @Injectable()
 export class TaskService {
-  async addSubTask(dto: AddSubItemDto) {
+  async addSubTask(dto: AddSubItemDto, username:string) {
     const parentTask = await this.taskRepo.findOneOrFail({
       where: {
         id: dto.parentItemId,
       },
     });
-    const childTask = await this.createTask(dto);
+    const childTask = await this.createTask(dto, username);
     parentTask.sharedWith = await this.shareRepo.find({
       where: { task: parentTask },
     });
@@ -53,12 +53,7 @@ export class TaskService {
       (report) => report.id === dto.id && report.userCreator === username,
     );
     if (prvReport) {
-      const report = new TaskReport(
-        dto.report,
-        username,
-        dto.id,
-        prvReport.createDate,
-      );
+      const report = TaskReport.update(prvReport, dto.report)
       task.reportList =
         task.reportList?.filter((report) => report.id !== dto.id) || [];
       task.reportList.push(report);
@@ -74,7 +69,7 @@ export class TaskService {
         id: itemId,
       },
     });
-    const report = new TaskReport(dto.report, username);
+    const report = TaskReport.addReport(dto.report, username);
     task.reportList ||= [];
     task.reportList.push(report);
     return await this.taskRepo.save(task);
@@ -134,6 +129,17 @@ export class TaskService {
     task.category = dto.category || task.category;
     task.backlog = dto.backlog || task.backlog;
     task.note = dto.note || task.note;
+    task.assignes = task.assignes || [];
+    dto.assignees?.forEach(asssignee=>{
+      if(asssignee.addAssignee)
+        task.assignes.push(asssignee.username);
+      else{
+        const index = task.assignes.indexOf(asssignee.username)
+        if (index > -1) { 
+          task.assignes.splice(index, 1); 
+        }
+      }
+    })
 
     return await this.taskRepo.save(task);
   }
@@ -182,7 +188,22 @@ export class TaskService {
     }
   }
 
-  async createTask(dto: AddItemDto): Promise<TaskEntity> {
+  private shareWithMe(dto: AddItemDto, username:string){
+    const alreadySharedWithMe = dto.shareWith.some(
+      (share) => share.username === username,
+    );
+
+    if (!alreadySharedWithMe) {
+      const shareMe = new ShareWithDto();
+      shareMe.username = username;
+      shareMe.accessibility = Accessibility.Editor;
+      dto.shareWith.push(shareMe);
+    }
+  }
+
+  async createTask(dto: AddItemDto, username:string): Promise<TaskEntity> {
+    this.shareWithMe(dto, username);
+
     const task = new TaskEntity();
 
     task.itemType = dto.itemType;
@@ -192,6 +213,8 @@ export class TaskService {
     task.priority = dto.priority;
     task.category = dto.category;
     task.backlog = dto.backlog;
+    task.assignes = dto.assignes;
+    task.creator = username;
 
     if (dto.shareWith?.length) {
       const shareEntities: TaskShareEntity[] = [];
@@ -222,14 +245,14 @@ export class TaskService {
     return await this.taskRepo.save(task);
   }
 
-  getTasks(username: string) {
-    return this.shareRepo
+
+  async getTasks(username: string) {
+    const sharedTask = await this.shareRepo
       .createQueryBuilder('share')
       .innerJoin('share.task', 'task')
       .where('share.username = :username', {
         username,
       })
-      .andWhere('task.parentTask IS NULL')
       .select([
         'task.id',
         'task.itemType',
@@ -237,8 +260,15 @@ export class TaskService {
         'task.category',
         'task.priority',
         'task.status',
-      ])
-      .getRawMany();
+        'task.parentTaskId'
+      ]).getRawMany();
+
+      const sharedIds = new Set(sharedTask.map(t => t.task_id));
+
+      return sharedTask
+        .filter(t => t.parentTaskId == null || !sharedIds.has(t.parentTaskId))
+        .map(({ parentTaskId, ...rest }) => rest);
+      
   }
 
   async getTaskDetail(username: string, taskId: string) {

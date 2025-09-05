@@ -35,14 +35,29 @@ export class TaskReport {
   constructor(
     text: string,
     username: string,
-    id?: string,
-    createDate?: string,
+    id: string,
+    createDate: string,
+    isEdited:boolean,
+    history?: string[]
   ) {
     this.text = text;
-    this.id = id || uuidv4();
+    this.id = id;
     this.userCreator = username;
-    this.createDate = createDate || format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+    this.createDate = createDate;
     this.lastModifyDate = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+    this.isEdited = isEdited;
+    this.history = history || [];
+  }
+
+  static addReport(text:string, creator:string){
+    const id = uuidv4();
+    const createDate = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+    return new TaskReport(text, creator, id, createDate, false)
+  }
+
+  static update(prvReport:TaskReport , newReportText:string){
+    prvReport.history.push(prvReport.text);
+    return new TaskReport(newReportText, prvReport.userCreator, prvReport.id, prvReport.createDate, true, prvReport.history)
   }
 
   id: string;
@@ -50,6 +65,8 @@ export class TaskReport {
   userCreator: string;
   createDate: string;
   lastModifyDate: string;
+  history: string[];
+  isEdited: boolean;
 }
 
 @Entity()
@@ -81,6 +98,9 @@ export class TaskEntity {
   @Column({ nullable: true })
   note?: string;
 
+  @Column('text', { array: true })
+  assignes:string[];
+
   @OneToMany(() => TaskShareEntity, (share) => share.task, { cascade: true })
   sharedWith: TaskShareEntity[];
 
@@ -99,6 +119,9 @@ export class TaskEntity {
 
   @OneToMany(() => MeetEntity, (meet) => meet.task)
   meets: MeetEntity[];
+  
+  @Column()
+  creator: string;
 
   static subtaskToJson(subTasks: TaskEntity) {
     return {

@@ -42,18 +42,8 @@ export class TaskController {
   @Post('/item')
   addItem(@Request() req: Req, @Body() dto: AddItemDto) {
     const username = req['user'].username;
-    const alreadySharedWithMe = dto.shareWith.some(
-      (share) => share.username === username,
-    );
 
-    if (!alreadySharedWithMe) {
-      const shareMe = new ShareWithDto();
-      shareMe.username = username;
-      shareMe.accessibility = Accessibility.Editor;
-      dto.shareWith.push(shareMe);
-    }
-
-    return this.taskService.createTask(dto);
+    return this.taskService.createTask(dto, username);
   }
 
   @UseGuards(AuthGuard)
@@ -140,7 +130,7 @@ export class TaskController {
         'resource not found or you can not chnage it.',
       );
     }
-    const task = await this.taskService.addSubTask(dto);
+    const task = await this.taskService.addSubTask(dto, username);
     return task;
   }
 }
