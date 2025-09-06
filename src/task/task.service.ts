@@ -289,6 +289,36 @@ export class TaskService {
       
   }
 
+  async searchTask(query:string , username:string){
+    const sharedTask = await this.shareRepo
+      .createQueryBuilder('share')
+      .innerJoin('share.task', 'task')
+      .where('share.username = :username', {
+        username,
+      })
+      .andWhere(
+        `to_tsvector('english', coalesce(task.itemTitle,'') || ' ' || coalesce(task.category,'') || ' ' || coalesce(task.note,'')) @@ plainto_tsquery('english', :query)`,
+        { query },
+      )
+      .orderBy(
+        `ts_rank(
+           to_tsvector('english', coalesce(task.itemTitle,'') || ' ' || coalesce(task.category,'') || ' ' || coalesce(task.note,'')),
+           plainto_tsquery('english', :query)
+         )`,
+        'DESC',
+      )
+      .select([
+        'task.id',
+        'task.itemType',
+        'task.itemTitle',
+        'task.category',
+        'task.priority',
+        'task.status'
+      ]).getRawMany();
+
+    return sharedTask;
+  }
+
   async getTaskDetail(username: string, taskId: string) {
     const task = await this.taskRepo
       .createQueryBuilder('parent')

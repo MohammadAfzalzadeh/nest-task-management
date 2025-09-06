@@ -77,6 +77,13 @@ export class TaskController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('/search:query')
+  search(@Request() req: Req,@Param('query') query: string) {
+    const username = req['user'].username;
+    return this.taskService.searchTask(query, username);
+  }
+
+  @UseGuards(AuthGuard)
   @Get('/item:itemId')
   getItemDetail(@Request() req: Req, @Param('itemId') itemId: string) {
     const username = req['user'].username;
