@@ -12,6 +12,7 @@ import { Accessibility, TaskShareEntity } from './task-share.entity';
 import { AuthEntity } from '../auth/auth.entity';
 import {
   UpdateAccessibility,
+  UpdateAssigneeDto,
   UpdateItemDto,
   UpdateShareWithDto,
 } from './dto/update-item.dto';
@@ -21,6 +22,9 @@ import { AddSubItemDto } from './dto/add_sub_item.dto';
 
 @Injectable()
 export class TaskService {
+  delete(itemId: string) {
+    return this.taskRepo.delete(itemId)
+  }
   async addSubTask(dto: AddSubItemDto, username:string) {
     const parentTask = await this.taskRepo.findOneOrFail({
       where: {
@@ -153,19 +157,9 @@ export class TaskService {
     task.category = dto.category || task.category;
     task.backlog = dto.backlog || task.backlog;
     task.note = dto.note || task.note;
-    task.assignes = task.assignes || [];
-    dto.assignees?.forEach(asssignee=>{
-      if(asssignee.addAssignee)
-        task.assignes.push(asssignee.username);
-      else{
-        const index = task.assignes.indexOf(asssignee.username)
-        if (index > -1) { 
-          task.assignes.splice(index, 1); 
-        }
-      }
-    })
-
-    return await this.taskRepo.save(task);
+    const response =  await this.taskRepo.save(task);
+    await this.updateAssignUsers(itemId, dto.assignees || []);
+    return response;
   }
 
   async updateTaskShare(itemId: string, sharedWith: UpdateShareWithDto[]) {
@@ -304,34 +298,117 @@ export class TaskService {
       .andWhere('parent.id = :taskId', { taskId })
       .getOneOrFail();
 
-    const childTask = await this.shareRepo
-      .createQueryBuilder('childTasks')
+      const childTask = await this.shareRepo
+      .createQueryBuilder('share')
       .innerJoin('share.task', 'task')
-      .where('share.username = :username , task.parentTaskId = :parentTaskId', {
-        username,
-        parentTaskId:task.id
-      })
+      .where('share.username = :username', { username })
+      .andWhere('task.parentTaskId = :parentTaskId', { parentTaskId: task.id })
       .select([
         'task.id',
         'task.itemType',
         'task.itemTitle',
         'task.category',
         'task.priority',
-        'task.status'
+        'task.status',
       ]).getRawMany();
     
     const isOwner = await this.shareRepo.findOne({where:{task:{id:task.id} , user:{username} , accessibility:Accessibility.Owner}})
     let reportList:any[] = task.reportList || []
     let CommentList:any[] = task.CommentList || []
     if (!isOwner){
-      reportList = reportList.map(r => {r.id , r.text , r.userCreator , r.createDate , r.isEdited , r.lastModifyDate })
-      CommentList = CommentList.map(r => {r.id , r.text , r.userCreator , r.createDate , r.isEdited , r.lastModifyDate })
+      reportList = reportList.map(r => ({id:r.id , text:r.text , creator:r.userCreator , createDate:r.createDate , isedited:r.isEdited , lastModifyDate:r.lastModifyDate }))
+      CommentList = CommentList.map(r => ({id:r.id , text:r.text , creator:r.userCreator , createDate:r.createDate , isedited:r.isEdited , lastModifyDate:r.lastModifyDate }))
     }
     return {
       ...task,
       children: childTask,
       reportList,
       CommentList
+    }
+  }
+
+  private async updateAssignUsers(taskId:string , users:UpdateAssigneeDto[]){
+    const assign:string[] = [];
+    const unassign:string[] = [];
+
+    users.forEach(u => {
+      if (u.addAssignee)
+        assign.push(u.username);
+      else 
+        unassign.push(u.username);
+    })
+
+    await this.assignUsers(taskId , assign);
+    await this.unassignUsers(taskId, unassign);
+  }
+   /**
+   * Assign users to a task and all its children
+   */
+   private async assignUsers(taskId: string, users: string[]): Promise<TaskEntity> {
+    const task = await this.taskRepo.findOne({
+      where: { id: taskId },
+      relations: ['subTasks'],
+    });
+    if (!task) throw new NotFoundException('Task not found');
+
+    // merge existing + new users (remove duplicates)
+    task.assignes = Array.from(new Set([...(task.assignes || []), ...users]));
+
+    await this.taskRepo.save(task);
+
+    // recursively assign to children
+    await this.updateChildAssignes(task.subTasks, task.assignes);
+
+    return task;
+  }
+
+  /**
+   * Unassign users from a task and all its children
+   */
+  private async unassignUsers(taskId: string, users: string[]): Promise<TaskEntity> {
+    const task = await this.taskRepo.findOne({
+      where: { id: taskId },
+      relations: ['subTasks'],
+    });
+    if (!task) throw new NotFoundException('Task not found');
+
+    // filter out the users
+    task.assignes = (task.assignes || []).filter(
+      (user) => !users.includes(user),
+    );
+
+    await this.taskRepo.save(task);
+
+    // recursively unassign from children
+    await this.updateChildAssignes(task.subTasks, task.assignes);
+
+    return task;
+  }
+
+  /**
+   * Recursive helper for updating child assignes
+   */
+  private async updateChildAssignes(
+    children: TaskEntity[],
+    parentAssignes: string[],
+  ) {
+    if (!children || children.length === 0) return;
+
+    for (const child of children) {
+      // load full entity including its own subTasks
+      const childTask = await this.taskRepo.findOne({
+        where: { id: child.id },
+        relations: ['subTasks'],
+      });
+
+      if (!childTask) continue;
+
+      // overwrite child assignes with parent assignes
+      childTask.assignes = [...parentAssignes];
+      await this.taskRepo.save(childTask);
+
+      // recursive call for deeper levels
+      await this.updateChildAssignes(childTask.subTasks, parentAssignes);
     }
   }
 /*

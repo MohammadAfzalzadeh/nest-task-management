@@ -146,6 +146,8 @@ export class TaskEntity {
       priority: this.priority,
       category: this.category,
       backlog: this.backlog,
+      creator: this.creator,
+      assignes: this.assignes,
       sharedWith: this.sharedWith?.map((share) => ({
         username: share.user.username,
         accessibility: share.accessibility,
@@ -159,6 +161,11 @@ export class TaskEntity {
       subTasks: this.subTasks?.map((subTasks) =>
         TaskEntity.subtaskToJson(subTasks),
       ),
+      CommentList: 
+      this.CommentList?.sort(
+        (a, b) =>
+          new Date(a.createDate).getTime() - new Date(b.createDate).getTime(),
+      ) || [],
     };
   }
 }

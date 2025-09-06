@@ -7,11 +7,12 @@ import { AuthEntity } from './auth.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TaskShareEntity } from '../task/task-share.entity';
+import { TaskEntity } from 'src/task/task.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forFeature([AuthEntity, TaskShareEntity]),
+    TypeOrmModule.forFeature([AuthEntity, TaskShareEntity, TaskEntity]),
     JwtModule.registerAsync({
       imports: [ConfigModule], // make sure ConfigService is available here
       inject: [ConfigService],

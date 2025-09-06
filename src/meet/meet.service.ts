@@ -154,7 +154,7 @@ export class MeetService {
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://afzalzademohammad.app.n8n.cloud/webhook-test/create Meet ',
+      url: 'https://afzalzademohammad.app.n8n.cloud/webhook-test/createMeet ',
       headers: { 
         'Content-Type': 'application/json'
       },

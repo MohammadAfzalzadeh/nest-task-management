@@ -16,6 +16,8 @@ import { ActiveUserDto } from './dto/activeUser.dto';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
 import { AuthDbInterface } from './auth.dbInterface';
+import { TaskEntity } from 'src/task/task.entity';
+import { Accessibility, TaskShareEntity } from 'src/task/task-share.entity';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +28,11 @@ export class AuthService {
     private readonly authRepository: Repository<AuthEntity>,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    @InjectRepository(TaskEntity)
+    private readonly taskRepo: Repository<TaskEntity>,
+    @InjectRepository(TaskShareEntity)
+    private readonly shareRepo: Repository<TaskShareEntity>,
+
   ) {
     this.authDbInterface = new AuthDbInterface(this.authRepository);
   }
@@ -78,10 +85,61 @@ export class AuthService {
       activeUserDto.setActive,
     );
 
+    if (!activeUserDto.setActive){
+      await this.removeAssigne(activeUserDto.username);
+      await this.removeCreator(activeUserDto.username);
+    }
+
     return {
       username: user.username,
       isActive: user.isActive,
     };
+  }
+
+  private async removeCreator(username: string){
+    const creatorTasks = await this.taskRepo.find({ where: { creator: username } });
+    for (const task of creatorTasks) {
+      const replacement = await this.findBestReplacement(task.id, username);
+      task.creator = replacement || 'admin';
+      await this.taskRepo.save(task);
+    }
+  }
+  private async findBestReplacement(taskId: string, disabledUser: string): Promise<string | null> {
+    const shares = await this.shareRepo.find({
+      where: { task: { id: taskId } },
+      relations: ['user'],
+    });
+
+    if (!shares.length) return null;
+
+    // sort by privilege order
+    const privilegeOrder = {
+      [Accessibility.Owner]: 1,
+      [Accessibility.Admin]: 2,
+      [Accessibility.Observer]: 3,
+    };
+
+    const best = shares
+      .filter((s) => s.user.username !== disabledUser) // exclude disabled user
+      .sort(
+        (a, b) =>
+          privilegeOrder[a.accessibility] - privilegeOrder[b.accessibility],
+      )[0];
+
+    return best ? best.user.username : null;
+  }
+  private async removeAssigne(username:string){
+    const assigneeTasks = await this.taskRepo
+      .createQueryBuilder('task')
+      .where(':username = ANY(task.assignes)', { username })
+      .getMany();
+
+    for (const task of assigneeTasks) {
+      task.assignes = task.assignes.map((user) =>
+        user === username ? `<del>${user}</del>` : user,
+      );
+      await this.taskRepo.save(task);
+    }
   }
 
   getAllUsers(): Promise<AuthEntity[] | null> {

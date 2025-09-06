@@ -18,6 +18,7 @@ import {
   NotFoundException,
   ForbiddenException,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response as Res, Request as Req } from 'express';
@@ -30,6 +31,7 @@ import { format } from 'date-fns';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { AddReportDto } from './dto/add-report.dto';
 import { AddSubItemDto } from './dto/add_sub_item.dto';
+import { error } from 'console';
 
 @Controller('task')
 export class TaskController {
@@ -171,5 +173,24 @@ export class TaskController {
     }
     const task = await this.taskService.updateTaskReport(itemId, username, dto, false);
     return task;
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('/item:itemId')
+  async deltetItem(
+    @Request() req: Req,
+    @Param('itemId') itemId: string,
+  ) {
+    const username = req['user'].username;
+    try {
+      const access = await this.taskService.isUserModifyAccess(username, itemId);
+      if (access.accessibility !== Accessibility.Owner )
+        throw new error()
+    } catch {
+      throw new ForbiddenException(
+        'resource not found or you can not chnage it.',
+      );
+    }
+    await this.taskService.delete(itemId);
   }
 }

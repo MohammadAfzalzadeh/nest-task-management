@@ -32,19 +32,16 @@ export class VerificationCodeService {
     let config = {
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://afzalzademohammad.app.n8n.cloud/webhook-test/Send mail',
+      url: 'http://localhost:5678/webhook-test/sendMail',
       headers: { 
         'Content-Type': 'application/json'
       },
       data : data
     };
 
-    axios.request(config)
-    .then((response) => {
-      console.log(JSON.stringify(response.data));
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+    console.log(data)
+
+    // await axios.request(config)
+    
   }
 }
