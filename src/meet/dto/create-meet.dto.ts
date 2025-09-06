@@ -7,16 +7,8 @@ import {
   IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { MeetType, MeetAttender } from '../meet.entity';
+import { MeetType } from '../meet.entity';
 import { ApiProperty } from '@nestjs/swagger';
-
-export class AttenderDto implements MeetAttender {
-  @IsString()
-  username: string;
-
-  @IsString()
-  email: string;
-}
 
 export class CreateMeetDto {
   @ApiProperty({
@@ -66,8 +58,8 @@ export class CreateMeetDto {
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => AttenderDto)
-  attenders: AttenderDto[];
+  @IsString()
+  attenders: string[];
 
   @ApiProperty({
     example: 'test place',

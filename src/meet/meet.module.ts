@@ -7,11 +7,12 @@ import { MeetEntity } from './meet.entity';
 import { TaskEntity } from 'src/task/task.entity';
 import { TaskShareEntity } from 'src/task/task-share.entity';
 import { AuthModule } from '../auth/auth.module';
+import { AuthEntity } from 'src/auth/auth.entity';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forFeature([MeetEntity, TaskEntity, TaskShareEntity]),
+    TypeOrmModule.forFeature([MeetEntity, TaskEntity, TaskShareEntity, AuthEntity]),
     AuthModule
   ],
   providers: [MeetService],

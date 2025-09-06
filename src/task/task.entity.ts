@@ -107,6 +107,9 @@ export class TaskEntity {
   @Column('jsonb', { nullable: true })
   reportList?: TaskReport[];
 
+  @Column('jsonb', { nullable: true })
+  CommentList?: TaskReport[];
+
   @ManyToOne(() => TaskEntity, (task) => task.subTasks, {
     nullable: true,
     onDelete: 'CASCADE',

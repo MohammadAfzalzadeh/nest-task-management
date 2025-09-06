@@ -4,12 +4,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityNotFoundError, Repository } from 'typeorm';
+import { EntityNotFoundError, In, Repository } from 'typeorm';
 import { MeetEntity, MeetStatus } from './meet.entity';
 import { TaskEntity } from 'src/task/task.entity';
 import { CreateMeetDto } from './dto/create-meet.dto';
 import { UpdateMeetDto } from './dto/update-meet.dto';
 import { Accessibility, TaskShareEntity } from 'src/task/task-share.entity';
+import { AuthEntity } from 'src/auth/auth.entity';
+const axios = require('axios');
 
 @Injectable()
 export class MeetService {
@@ -20,6 +22,8 @@ export class MeetService {
     private taskRepo: Repository<TaskEntity>,
     @InjectRepository(TaskShareEntity)
     private shareRepo: Repository<TaskShareEntity>,
+    @InjectRepository(AuthEntity)
+    private userRepo: Repository<AuthEntity>,
   ) {}
   private async getMeetTask(meetId){
     const meet = await this.meetRepo.findOneOrFail({where: {id:meetId}})
@@ -33,7 +37,7 @@ export class MeetService {
             where: { user: { username }, task: { id: taskId } },
             select: { accessibility: true },
           })
-        ).accessibility === Accessibility.Editor
+        ).accessibility === Accessibility.Owner
       );
     } catch (e) {
       if (e instanceof EntityNotFoundError) {
@@ -44,12 +48,25 @@ export class MeetService {
       throw e;
     }
   }
+
+  async getEmails(userIdentifiers: string[]): Promise<string[]> {
+    const users = await this.userRepo.find({
+      where: [
+        { username: In(userIdentifiers) },
+        { email: In(userIdentifiers) },
+      ],
+      select: ['email'],
+    });
+
+    return users.map(u => u.email);
+  }
+
   async createMeet(taskId: string, dto: CreateMeetDto, creator: string) {
     const isOwner = await this.checkUserAccess(creator, taskId);
 
     const task = await this.taskRepo.findOne({ where: { id: taskId } });
     if (!task) throw new NotFoundException('Task not found');
-
+    dto.attenders = await this.getEmails(dto.attenders);
     const meet = this.meetRepo.create({
       ...dto,
       status: MeetStatus.Pending,
@@ -65,6 +82,7 @@ export class MeetService {
         descriptionHistory: meet.descriptionHistory,
       };
     }
+    await this.scduleMeet(meet)
     return meet;
   }
 
@@ -123,5 +141,27 @@ export class MeetService {
       };
     }
     return meet;
+  }
+  async scduleMeet(meet:MeetEntity){
+    const data = JSON.stringify({
+      adendees: meet.attenders,
+      startTime:meet.startTime,
+      endTime:meet.endTime,
+      title:meet.title,
+      detail:meet.reason,
+    });
+
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: 'https://afzalzademohammad.app.n8n.cloud/webhook-test/create Meet ',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      data : data
+    };
+
+    await axios.request(config)
+    return true
   }
 }

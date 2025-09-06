@@ -9,8 +9,9 @@ import { TaskEntity } from './task.entity';
 import { AuthEntity } from '../auth/auth.entity';
 
 export enum Accessibility {
-  Viewer = 'viewer',
-  Editor = 'editor',
+  Owner = 'owner',
+  Admin = 'admin',
+  Observer = 'observer'
 }
 
 @Entity()

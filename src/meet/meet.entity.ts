@@ -27,11 +27,6 @@ export class MeetDescription {
   text: string;
 }
 
-export class MeetAttender {
-  username: string;
-  email: string;
-}
-
 @Entity()
 export class MeetEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -71,7 +66,7 @@ export class MeetEntity {
   descriptionHistory: MeetDescription[];
 
   @Column('jsonb', { default: [] })
-  attenders: MeetAttender[];
+  attenders: string[];
 
   @ManyToOne(() => TaskEntity, (task) => task.meets, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'TaskId' })

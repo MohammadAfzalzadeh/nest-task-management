@@ -30,7 +30,4 @@ export class UpdateMeetDto {
   @ValidateNested()
   @Type(() => DescriptionDto)
   description?: DescriptionDto;
-
-  @IsString()
-  username: string; // to check if ali
 }

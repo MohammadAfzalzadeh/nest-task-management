@@ -31,7 +31,9 @@ export class TaskService {
     parentTask.sharedWith = await this.shareRepo.find({
       where: { task: parentTask },
     });
+/*
     await this.checkUpdateConditions(parentTask, childTask);
+*/
     childTask.parentTask = parentTask;
     parentTask.subTasks =
       (await this.taskRepo.find({ where: { parentTask: parentTask } })) || [];
@@ -43,35 +45,57 @@ export class TaskService {
     itemId: string,
     username: string,
     dto: UpdateReportDto,
+    isReport:boolean = true
   ) {
     const task = await this.taskRepo.findOneOrFail({
       where: {
         id: itemId,
       },
     });
-    const prvReport = task.reportList?.find(
-      (report) => report.id === dto.id && report.userCreator === username,
-    );
-    if (prvReport) {
-      const report = TaskReport.update(prvReport, dto.report)
-      task.reportList =
-        task.reportList?.filter((report) => report.id !== dto.id) || [];
-      task.reportList.push(report);
-      return await this.taskRepo.save(task);
+    if (isReport){
+      const prvReport = task.reportList?.find(
+        (report) => report.id === dto.id && report.userCreator === username,
+      );
+      if (prvReport) {
+        const report = TaskReport.update(prvReport, dto.report)
+        task.reportList =
+          task.reportList?.filter((report) => report.id !== dto.id) || [];
+        task.reportList.push(report);
+        return await this.taskRepo.save(task);
+      }
+      throw new ForbiddenException(
+        'report not found or you have not access to edit it',
+      );
+    }else {
+      const prvComment = task.CommentList?.find(
+        (report) => report.id === dto.id && report.userCreator === username,
+      );
+      if (prvComment) {
+        const report = TaskReport.update(prvComment, dto.report)
+        task.CommentList =
+          task.CommentList?.filter((report) => report.id !== dto.id) || [];
+        task.CommentList.push(report);
+        return await this.taskRepo.save(task);
+      }
+      throw new ForbiddenException(
+        'comment not found or you have not access to edit it',
+      );
     }
-    throw new ForbiddenException(
-      'report not found or you have not access to edit it',
-    );
   }
-  async addTaskReport(itemId: string, username: string, dto: AddReportDto) {
+  async addTaskReport(itemId: string, username: string, dto: AddReportDto , isReport:boolean = true) {
     const task = await this.taskRepo.findOneOrFail({
       where: {
         id: itemId,
       },
     });
     const report = TaskReport.addReport(dto.report, username);
-    task.reportList ||= [];
-    task.reportList.push(report);
+    if (isReport){
+      task.reportList ||= [];
+      task.reportList.push(report);
+    }else{
+      task.CommentList ||= [];
+      task.CommentList.push(report)
+    }
     return await this.taskRepo.save(task);
   }
 
@@ -98,7 +122,7 @@ export class TaskService {
         user: {
           username,
         },
-        accessibility: Accessibility.Editor,
+        // accessibility: Accessibility.Editor,
       },
     });
   }
@@ -109,18 +133,18 @@ export class TaskService {
         id: itemId,
       },
     });
-
+/*
     if (task.parentTask) {
       await this.checkUpdateConditions(task.parentTask, task);
     }
-
+*/
     task.subTasks = await this.taskRepo.find({ where: { parentTask: task } });
-
+/*
     if (task.subTasks.length > 0) {
       for (const childTask of task.subTasks)
         await this.checkUpdateConditions(task, childTask);
     }
-
+*/
     task.itemType = dto.itemType || task.itemType;
     task.itemTitle = dto.itemTitle || task.itemTitle;
     task.deadline = new Date(dto.deadline || task.deadline.toString());
@@ -196,7 +220,7 @@ export class TaskService {
     if (!alreadySharedWithMe) {
       const shareMe = new ShareWithDto();
       shareMe.username = username;
-      shareMe.accessibility = Accessibility.Editor;
+      shareMe.accessibility = Accessibility.Owner;
       dto.shareWith.push(shareMe);
     }
   }
@@ -272,15 +296,45 @@ export class TaskService {
   }
 
   async getTaskDetail(username: string, taskId: string) {
-    return this.taskRepo
+    const task = await this.taskRepo
       .createQueryBuilder('parent')
       .leftJoinAndSelect('parent.subTasks', 'child')
       .innerJoin('parent.sharedWith', 'share')
       .where('share.username = :username', { username })
       .andWhere('parent.id = :taskId', { taskId })
-      .getOne();
-  }
+      .getOneOrFail();
 
+    const childTask = await this.shareRepo
+      .createQueryBuilder('childTasks')
+      .innerJoin('share.task', 'task')
+      .where('share.username = :username , task.parentTaskId = :parentTaskId', {
+        username,
+        parentTaskId:task.id
+      })
+      .select([
+        'task.id',
+        'task.itemType',
+        'task.itemTitle',
+        'task.category',
+        'task.priority',
+        'task.status'
+      ]).getRawMany();
+    
+    const isOwner = await this.shareRepo.findOne({where:{task:{id:task.id} , user:{username} , accessibility:Accessibility.Owner}})
+    let reportList:any[] = task.reportList || []
+    let CommentList:any[] = task.CommentList || []
+    if (!isOwner){
+      reportList = reportList.map(r => {r.id , r.text , r.userCreator , r.createDate , r.isEdited , r.lastModifyDate })
+      CommentList = CommentList.map(r => {r.id , r.text , r.userCreator , r.createDate , r.isEdited , r.lastModifyDate })
+    }
+    return {
+      ...task,
+      children: childTask,
+      reportList,
+      CommentList
+    }
+  }
+/*
   private checkUpdateConditions(
     parentTask: TaskEntity,
     childTask: TaskEntity,
@@ -376,4 +430,5 @@ export class TaskService {
       );
     }
   }
+*/
 }

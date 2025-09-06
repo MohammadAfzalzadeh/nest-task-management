@@ -133,4 +133,43 @@ export class TaskController {
     const task = await this.taskService.addSubTask(dto, username);
     return task;
   }
+
+
+  @UseGuards(AuthGuard)
+  @Post('/comment:itemId')
+  async addComment(
+    @Request() req: Req,
+    @Body() dto: AddReportDto,
+    @Param('itemId') itemId: string,
+  ) {
+    const username = req['user'].username;
+    try {
+      await this.taskService.isUserModifyAccess(username, itemId);
+    } catch {
+      throw new ForbiddenException(
+        'resource not found or you can not chnage it.',
+      );
+    }
+    const task = await this.taskService.addTaskReport(itemId, username, dto, false);
+    return task;
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('/comment:itemId')
+  async updateComment(
+    @Request() req: Req,
+    @Body() dto: UpdateReportDto,
+    @Param('itemId') itemId: string,
+  ) {
+    const username = req['user'].username;
+    try {
+      await this.taskService.isUserModifyAccess(username, itemId);
+    } catch {
+      throw new ForbiddenException(
+        'resource not found or you can not chnage it.',
+      );
+    }
+    const task = await this.taskService.updateTaskReport(itemId, username, dto, false);
+    return task;
+  }
 }
