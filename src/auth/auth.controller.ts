@@ -39,6 +39,7 @@ import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ApiProduces, ApiOkResponse } from '@nestjs/swagger';
 import * as path from 'node:path';
+import { ChangePasswordDto } from './dto/changePassword.dto';
 
 const MAX_FILE_SIZE =
   parseInt(process.env.FILE_UPLOAD_MAX_SIZE_MB || '10') * 1024 * 1024;
@@ -214,5 +215,16 @@ export class AuthController {
     const isValid = this.verificationCodeService.verifyCode(email, code);
     if (!isValid) throw new NotFoundException('Invalid or expired code');
     return { message: 'Email verified successfully' };
+  }
+
+  @Post('chnagePassword')
+  async changePassword(dto:ChangePasswordDto){
+    if (dto.newPassword != dto.confirmPassword) {
+      throw new BadRequestException(
+        'password and repeatPassword must be matches.',
+      );
+    }
+    await this.authService.changePassword(dto)
+    return { message: 'Password changed successfully' };
   }
 }

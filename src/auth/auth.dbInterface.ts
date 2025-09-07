@@ -1,8 +1,19 @@
 import { Repository } from 'typeorm';
 import { AuthEntity } from './auth.entity';
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 export class AuthDbInterface {
+  async chnagePass(username: string, hashedPassword: string) {
+    // Find user
+    const user = await this.authRepository.findOne({ where: { username } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update password
+    user.password = hashedPassword;
+    await this.authRepository.save(user);
+  }
   constructor(private readonly authRepository: Repository<AuthEntity>) {}
   async addAuth(data): Promise<AuthEntity[]> {
     await this.checkUniquePrometers(data);

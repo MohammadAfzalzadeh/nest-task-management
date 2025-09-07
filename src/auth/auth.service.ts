@@ -18,6 +18,7 @@ import { createHash } from 'crypto';
 import { AuthDbInterface } from './auth.dbInterface';
 import { TaskEntity } from 'src/task/task.entity';
 import { Accessibility, TaskShareEntity } from 'src/task/task-share.entity';
+import { ChangePasswordDto } from './dto/changePassword.dto';
 
 @Injectable()
 export class AuthService {
@@ -45,6 +46,11 @@ export class AuthService {
     const data = this.destructDto2Entity(signUpDto);
     data.password = this.hashPass(data.password);
     return this.authDbInterface.addAuth(data);
+  }
+
+  async changePassword(dto:ChangePasswordDto){
+    const hashedPassword = this.hashPass(dto.newPassword);
+    this.authDbInterface.chnagePass(dto.username , hashedPassword)
   }
 
   async logIn(logInDto: LogInDto): Promise<string> {
