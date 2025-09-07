@@ -31,4 +31,7 @@ export class TaskShareEntity {
 
   @Column({ type: 'enum', enum: Accessibility })
   accessibility: Accessibility;
+
+  @Column({type: 'boolean' , default:true})
+  pending: boolean;
 }

@@ -32,6 +32,7 @@ import { UpdateReportDto } from './dto/update-report.dto';
 import { AddReportDto } from './dto/add-report.dto';
 import { AddSubItemDto } from './dto/add_sub_item.dto';
 import { error } from 'console';
+import { ShareItemDto } from './dto/share_item.tdo';
 
 @Controller('task')
 export class TaskController {
@@ -199,5 +200,16 @@ export class TaskController {
       );
     }
     await this.taskService.delete(itemId);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('/share:itemId')
+  async share (
+    @Request() req: Req,
+    @Body() dto: ShareItemDto,
+    @Param('itemId') itemId: string,
+  ){
+    const username = req['user'].username;
+    this.taskService.share(dto.shareWith , itemId);
   }
 }

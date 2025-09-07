@@ -11,17 +11,55 @@ import { AddItemDto, ShareWithDto } from './dto/add-item.dto';
 import { Accessibility, TaskShareEntity } from './task-share.entity';
 import { AuthEntity } from '../auth/auth.entity';
 import {
-  UpdateAccessibility,
   UpdateAssigneeDto,
   UpdateItemDto,
-  UpdateShareWithDto,
 } from './dto/update-item.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { AddReportDto } from './dto/add-report.dto';
 import { AddSubItemDto } from './dto/add_sub_item.dto';
+import { UpdateShareWithDto, UpdateAccessibility } from './dto/share_item.tdo';
 
 @Injectable()
 export class TaskService {
+  async share(shareWith:UpdateShareWithDto[] , itemId:string) {
+    const task = await this.taskRepo.findOne({
+      where: { id: itemId },
+      relations: ['subTasks'],
+    });
+    if (!task) throw new NotFoundException('Task not found');
+    for(const share of shareWith){
+    await this.shareRepo.delete({
+      task: { id: itemId },
+      user: { username:share.username },
+    });
+    if (share.accessibility !== UpdateAccessibility.Delete) {
+      await this.shareRepo.save(
+        this.shareRepo.create({
+          task: { id: itemId },
+          user: { username: share.username },
+          accessibility: share.accessibility  as unknown as Accessibility,
+          pending: true,
+        }),
+      );
+    }
+    
+    }
+    this.changeShareChildren(task.subTasks , shareWith )
+  }
+  private async changeShareChildren(children:TaskEntity[] , shareWith:UpdateShareWithDto[]){
+    if (!children || children.length === 0) return;
+
+    for (const child of children) {
+      const childTask = await this.taskRepo.findOne({
+        where: { id: child.id },
+        relations: ['subTasks'],
+      });
+
+      if (!childTask) continue;
+
+      await this.changeShareChildren(childTask.subTasks , shareWith);
+    }
+  }
   delete(itemId: string) {
     return this.taskRepo.delete(itemId)
   }
@@ -387,7 +425,7 @@ export class TaskService {
     await this.taskRepo.save(task);
 
     // recursively assign to children
-    await this.updateChildAssignes(task.subTasks, task.assignes);
+    await this.updateChildAssignes(task.subTasks, users);
 
     return task;
   }
@@ -410,7 +448,7 @@ export class TaskService {
     await this.taskRepo.save(task);
 
     // recursively unassign from children
-    await this.updateChildAssignes(task.subTasks, task.assignes);
+    await this.updateChildUnassignes(task.subTasks, users);
 
     return task;
   }
@@ -420,7 +458,7 @@ export class TaskService {
    */
   private async updateChildAssignes(
     children: TaskEntity[],
-    parentAssignes: string[],
+    users: string[],
   ) {
     if (!children || children.length === 0) return;
 
@@ -434,11 +472,41 @@ export class TaskService {
       if (!childTask) continue;
 
       // overwrite child assignes with parent assignes
-      childTask.assignes = [...parentAssignes];
+      childTask.assignes = Array.from(new Set([...(childTask.assignes || []), ...users]));
+
       await this.taskRepo.save(childTask);
 
       // recursive call for deeper levels
-      await this.updateChildAssignes(childTask.subTasks, parentAssignes);
+      await this.updateChildAssignes(childTask.subTasks, users);
+    }
+  }
+  /**
+   * Recursive helper for updating child assignes
+   */
+  private async updateChildUnassignes(
+    children: TaskEntity[],
+    users: string[],
+  ) {
+    if (!children || children.length === 0) return;
+
+    for (const child of children) {
+      // load full entity including its own subTasks
+      const childTask = await this.taskRepo.findOne({
+        where: { id: child.id },
+        relations: ['subTasks'],
+      });
+
+      if (!childTask) continue;
+
+      // overwrite child assignes with parent assignes
+      childTask.assignes = (childTask.assignes || []).filter(
+        (user) => !users.includes(user),
+      );
+  
+      await this.taskRepo.save(childTask);
+
+      // recursive call for deeper levels
+      await this.updateChildAssignes(childTask.subTasks, users);
     }
   }
 /*
