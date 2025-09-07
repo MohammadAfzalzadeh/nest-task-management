@@ -3,31 +3,21 @@ import {
   Controller,
   Get,
   Post,
-  Response,
   Request,
-  UnauthorizedException,
   UseGuards,
   Patch,
-  BadRequestException,
   Param,
-  UseInterceptors,
-  UploadedFile,
-  MaxFileSizeValidator,
-  ParseFilePipe,
-  FileTypeValidator,
-  NotFoundException,
   ForbiddenException,
   Put,
   Delete,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response as Res, Request as Req } from 'express';
-import { Accessibility } from './task-share.entity';
+import { Accessibility, TaskShareEntity } from './task-share.entity';
 import { TaskService } from './task.service';
 import { AddItemDto, ShareWithDto } from './dto/add-item.dto';
 import { AuthGuard } from '../auth/auth.guard';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { format } from 'date-fns';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { AddReportDto } from './dto/add-report.dto';
 import { AddSubItemDto } from './dto/add_sub_item.dto';
@@ -213,5 +203,24 @@ export class TaskController {
   ){
     const username = req['user'].username;
     this.taskService.share(dto.shareWith , itemId);
+  }
+
+
+  @UseGuards(AuthGuard)
+  @Get('pending/')
+  async getPendingShares(@Request() req: Req): Promise<TaskShareEntity[]> {
+    const username = req['user'].username;
+    return this.taskService.getPendingShares(username);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('accept')
+  async acceptShare(
+    @Request() req: Req , 
+    @Body() body: { taskId: string },
+  ): Promise<{ message: string }> {
+    const username = req['user'].username;
+    await this.taskService.acceptShare(username, body.taskId);
+    return { message: 'Task and its children accepted successfully' };
   }
 }

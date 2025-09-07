@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -21,6 +20,51 @@ import { UpdateShareWithDto, UpdateAccessibility } from './dto/share_item.tdo';
 
 @Injectable()
 export class TaskService {
+  async getPendingShares(username: string): Promise<TaskShareEntity[]> {
+    const shares = await this.shareRepo.find({
+      where: { user: { username }, pending: true },
+      relations: [
+        'task',
+        'task.parentTask'
+      ],
+    });
+    let response: TaskShareEntity[] = []
+    let tasks = shares.map((share) => share.task);
+
+    for (const share of shares){
+      const parentTaskId = share.task.parentTask?.id
+      if (!tasks.find(t=>t.id===parentTaskId))
+        response.push(share)
+    }
+    return response;
+  }
+
+  async acceptShare(username: string, taskId: string): Promise<void> {
+    const task = await this.shareRepo.manager.getRepository(TaskEntity).findOne({
+      where: { id: taskId },
+      relations: ['subTasks'], 
+    });
+  
+    if (!task) {
+      throw new Error('Task not found');
+    }
+
+    await this.shareRepo
+      .createQueryBuilder()
+      .update()
+      .set({ pending: false })
+      .where('user.username = :username', { username })
+      .andWhere('taskId IN (:taskId)', { taskId })
+      .execute();
+
+    for (const childTask of task.subTasks){
+      const childShare = await this.shareRepo.findOne({where:{task:{id:childTask.id} , user: {username} , pending:true}})
+      if (childShare)
+        await this.acceptShare(username , childTask.id)
+    }
+  }
+
+  
   async share(shareWith:UpdateShareWithDto[] , itemId:string) {
     const task = await this.taskRepo.findOne({
       where: { id: itemId },
