@@ -43,10 +43,10 @@ export class TaskService {
       );
     }
     
+    this.changeShareChildren(task.subTasks , share )
     }
-    this.changeShareChildren(task.subTasks , shareWith )
   }
-  private async changeShareChildren(children:TaskEntity[] , shareWith:UpdateShareWithDto[]){
+  private async changeShareChildren(children:TaskEntity[] , share:UpdateShareWithDto){
     if (!children || children.length === 0) return;
 
     for (const child of children) {
@@ -56,8 +56,31 @@ export class TaskService {
       });
 
       if (!childTask) continue;
+      
 
-      await this.changeShareChildren(childTask.subTasks , shareWith);
+      const taskShare = await this.shareRepo.findOne({where: {user:{username:share.username} , task:{id:child.id}}})
+
+      if (!taskShare)
+        await this.shareRepo.save(
+          this.shareRepo.create({
+            task: { id: child.id },
+            user: { username: share.username },
+            accessibility: share.accessibility  as unknown as Accessibility,
+            pending: true,
+          }),
+        );
+      if (taskShare?.accessibility === Accessibility.Observer && share.accessibility as unknown as Accessibility !== Accessibility.Observer){
+        taskShare.accessibility = share.accessibility as unknown as Accessibility;
+        taskShare.pending = true;
+        this.shareRepo.save(taskShare);
+      }else if (taskShare?.accessibility === Accessibility.Admin && share.accessibility as unknown as Accessibility === Accessibility.Owner){
+        taskShare.accessibility = share.accessibility as unknown as Accessibility;
+        taskShare.pending = true;
+        this.shareRepo.save(taskShare);
+      }
+      else 
+        continue;
+      await this.changeShareChildren(childTask.subTasks , share);
     }
   }
   delete(itemId: string) {
@@ -199,7 +222,7 @@ export class TaskService {
     await this.updateAssignUsers(itemId, dto.assignees || []);
     return response;
   }
-
+/*
   async updateTaskShare(itemId: string, sharedWith: UpdateShareWithDto[]) {
     for (const taskShare of sharedWith) {
       const prvTaskShare = await this.shareRepo.findOne({
@@ -243,7 +266,7 @@ export class TaskService {
       }
     }
   }
-
+*/
   private shareWithMe(dto: AddItemDto, username:string){
     const alreadySharedWithMe = dto.shareWith.some(
       (share) => share.username === username,

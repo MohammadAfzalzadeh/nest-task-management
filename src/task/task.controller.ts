@@ -65,8 +65,10 @@ export class TaskController {
       );
     }
     const task = await this.taskService.updateTask(itemId, dto);
+    /*
     if (dto.shareWith && dto.shareWith.length > 0)
       await this.taskService.updateTaskShare(itemId, dto.shareWith);
+    */
     return task;
   }
 
